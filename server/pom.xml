@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+		<maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -150,6 +152,50 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>3.6.0</version>
+					<configuration>
+							<configLocation>config/checkstyle.xml</configLocation>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>true</failsOnError>
+							<includeTestSourceDirectory>false</includeTestSourceDirectory>
+							<excludes>**/ServerApplication.java</excludes>
+					</configuration>
+					<executions>
+							<execution>
+									<id>validate</id>
+									<phase>validate</phase>
+									<goals>
+											<goal>check</goal>
+									</goals>
+							</execution>
+					</executions>
+			</plugin>
+
+			<plugin>
+					<groupId>org.owasp</groupId>
+					<artifactId>dependency-check-maven</artifactId>
+					<version>12.1.0</version>
+					<configuration>
+							<failBuildOnCVSS>9</failBuildOnCVSS>
+							<suppressionFile>config/owasp-suppressions.xml</suppressionFile>
+							<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+							<formats>
+									<format>HTML</format>
+							</formats>
+					</configuration>
+			</plugin>
+
+			<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<configuration>
+							<skipTests>true</skipTests>
+					</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 
