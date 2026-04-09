@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+
+    <!-- Exclude Lombok-generated equals/hashCode/builder patterns -->
+    <Match>
+        <Class name="~.*\$Builder"/>
+    </Match>
+
+    <!-- Exclude Spring Boot main class -->
+    <Match>
+        <Class name="com.smartcampus.server.ServerApplication"/>
+    </Match>
+
+    <!-- Exclude entity stub classes (User, Resource) - M1/M4 will own these -->
+    <Match>
+        <Class name="com.smartcampus.server.entity.User"/>
+    </Match>
+    <Match>
+        <Class name="com.smartcampus.server.entity.Resource"/>
+    </Match>
+
+    <!-- Ignore EI_EXPOSE_REP on DTOs - intentional for Spring serialization -->
+    <Match>
+        <Package name="com.smartcampus.server.dto"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+</FindBugsFilter>
