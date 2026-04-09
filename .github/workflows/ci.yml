@@ -22,6 +22,10 @@ jobs:
           distribution: "temurin"
           cache: maven
 
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+        working-directory: server
+
       - name: Compile
         run: ./mvnw clean compile -B -DskipTests
         working-directory: server
