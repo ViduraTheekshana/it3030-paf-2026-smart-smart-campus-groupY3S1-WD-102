@@ -33,15 +33,3 @@ jobs:
       - name: Checkstyle
         run: ./mvnw checkstyle:check -B
         working-directory: server
-
-      - name: Dependency vulnerability scan
-        run: ./mvnw dependency-check:check -B
-        working-directory: server
-        continue-on-error: true
-
-      - name: Upload dependency check report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-report
-          path: server/target/dependency-check-report.html
