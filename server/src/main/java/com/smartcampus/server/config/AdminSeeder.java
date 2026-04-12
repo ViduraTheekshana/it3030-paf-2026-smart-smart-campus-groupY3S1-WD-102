@@ -4,6 +4,8 @@ import com.smartcampus.server.model.AuthProvider;
 import com.smartcampus.server.model.User;
 import com.smartcampus.server.repository.UserRepository;
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,13 +14,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class AdminSeeder {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(AdminSeeder.class);
+
     @Bean
     CommandLineRunner seedAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
+
             String adminEmail = "admin@gmail.com";
 
             if (userRepository.findByEmail(adminEmail).isPresent()) {
-                System.out.println("Admin already exists: " + adminEmail);
+                logger.info("Admin already exists: {}", adminEmail);
                 return;
             }
 
@@ -31,14 +37,15 @@ public class AdminSeeder {
             admin.setPhoneNumber("0712345678");
             admin.setProvider(AuthProvider.LOCAL);
 
-            // Change this line if your role enum/class name is different
+            // Role assignment
             admin.setRole(com.smartcampus.server.model.Role.ROLE_ADMIN);
 
             admin.setCreatedAt(LocalDateTime.now());
             admin.setUpdatedAt(LocalDateTime.now());
 
             userRepository.save(admin);
-            System.out.println("Admin created: " + adminEmail + " / Admin@123");
+
+            logger.info("Admin created: {} / Admin@123", adminEmail);
         };
     }
 }

@@ -102,7 +102,7 @@ public class AuthService {
             throw new BadRequestException("This account uses " + user.getProvider() + " sign-in. Please sign in with your provider.");
         }
 
-        passwordResetTokenRepository.deleteByUser_UserId(user.getUserId());
+        passwordResetTokenRepository.deleteByUserUserId(user.getUserId());
 
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUser(user);

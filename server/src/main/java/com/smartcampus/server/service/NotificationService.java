@@ -25,11 +25,11 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public NotificationSummaryDTO getMyNotifications(Long userId) {
-        List<NotificationDTO> items = notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
+        List<NotificationDTO> items = notificationRepository.findByUserUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(NotificationDTO::fromEntity)
                 .toList();
-        long unread = notificationRepository.countByUser_UserIdAndReadFalse(userId);
+        long unread = notificationRepository.countByUserUserIdAndReadFalse(userId);
         return new NotificationSummaryDTO(unread, items);
     }
 
@@ -56,7 +56,7 @@ public class NotificationService {
 
     @Transactional
     public NotificationSummaryDTO markAllAsRead(Long userId) {
-        List<Notification> notifications = notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
+        List<Notification> notifications = notificationRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
         notifications.forEach(notification -> notification.setRead(true));
         notificationRepository.saveAll(notifications);
         return getMyNotifications(userId);
