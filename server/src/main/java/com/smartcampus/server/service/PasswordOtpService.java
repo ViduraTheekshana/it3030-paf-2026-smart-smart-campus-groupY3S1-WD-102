@@ -46,7 +46,7 @@ public class PasswordOtpService {
             );
         }
 
-        otpRepository.deleteByUser_UserId(user.getUserId());
+        otpRepository.deleteByUserUserId(user.getUserId());
 
         String otpCode = generateOtp();
 
@@ -75,7 +75,7 @@ public class PasswordOtpService {
         }
 
         PasswordResetOtp otp = otpRepository
-                .findByUser_UserIdAndOtpCodeAndUsedFalse(user.getUserId(), request.getOtp())
+                .findByUserUserIdAndOtpCodeAndUsedFalse(user.getUserId(), request.getOtp())
                 .orElseThrow(() -> new BadRequestException("Invalid OTP."));
 
         if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
@@ -97,7 +97,7 @@ public class PasswordOtpService {
         }
 
         PasswordResetOtp otp = otpRepository
-                .findByUser_UserIdAndOtpCodeAndUsedFalse(user.getUserId(), request.getOtp())
+                .findByUserUserIdAndOtpCodeAndUsedFalse(user.getUserId(), request.getOtp())
                 .orElseThrow(() -> new BadRequestException("Invalid OTP."));
 
         if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
