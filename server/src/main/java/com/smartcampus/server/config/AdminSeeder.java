@@ -14,8 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class AdminSeeder {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(AdminSeeder.class);
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(AdminSeeder.class);
+
 
     @Bean
     CommandLineRunner seedAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -24,7 +25,7 @@ public class AdminSeeder {
             String adminEmail = "admin@gmail.com";
 
             if (userRepository.findByEmail(adminEmail).isPresent()) {
-                logger.info("Admin already exists: {}", adminEmail);
+                LOGGER.info("Admin already exists: {}", adminEmail);
                 return;
             }
 
@@ -45,7 +46,9 @@ public class AdminSeeder {
 
             userRepository.save(admin);
 
-            logger.info("Admin created: {} / Admin@123", adminEmail);
+           LOGGER.info("Admin already exists: {}", adminEmail);
+
+LOGGER.info("Admin created: {} / Admin@123", adminEmail);
         };
     }
 }
