@@ -4,6 +4,7 @@ import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
 import com.smartcampus.server.model.Resource;
+import com.smartcampus.server.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
