@@ -20,35 +20,35 @@ import java.util.UUID;
 
 public interface IncidentService {
 
-    TicketResponse createTicket(CreateTicketRequest request, UUID currentUserId);
+    TicketResponse createTicket(CreateTicketRequest request, Long currentUserId);
 
     Page<TicketSummaryResponse> getAllTickets(
             TicketStatus status, TicketCategory category, TicketPriority priority,
-            UUID currentUserId, String currentUserRole, Pageable pageable);
+            Long currentUserId, String currentUserRole, Pageable pageable);
 
-    TicketResponse getTicket(UUID ticketId, UUID currentUserId, String currentUserRole);
+    TicketResponse getTicket(UUID ticketId, Long currentUserId, String currentUserRole);
 
     TicketResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request,
-                                      UUID currentUserId, String currentUserRole);
+                                      Long currentUserId, String currentUserRole);
 
     TicketResponse assignTicket(UUID ticketId, AssignTicketRequest request, String currentUserRole);
 
     void deleteTicket(UUID ticketId, String currentUserRole);
 
     AttachmentResponse uploadAttachment(UUID ticketId, MultipartFile file,
-                                        UUID currentUserId) throws IOException;
+                                        Long currentUserId) throws IOException;
 
     void deleteAttachment(UUID ticketId, UUID attachmentId,
-                          UUID currentUserId, String currentUserRole) throws IOException;
+                          Long currentUserId, String currentUserRole) throws IOException;
 
     byte[] getAttachmentBytes(UUID attachmentId);
 
     String getAttachmentMimeType(UUID attachmentId);
 
-    CommentResponse addComment(UUID ticketId, CreateCommentRequest request, UUID currentUserId);
+    CommentResponse addComment(UUID ticketId, CreateCommentRequest request, Long currentUserId);
 
     CommentResponse updateComment(UUID ticketId, UUID commentId,
-                                  CreateCommentRequest request, UUID currentUserId);
+                                  CreateCommentRequest request, Long currentUserId);
 
-    void deleteComment(UUID ticketId, UUID commentId, UUID currentUserId, String currentUserRole);
+    void deleteComment(UUID ticketId, UUID commentId, Long currentUserId, String currentUserRole);
 }

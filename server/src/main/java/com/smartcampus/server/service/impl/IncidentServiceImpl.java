@@ -12,7 +12,7 @@ import com.smartcampus.server.model.Resource;
 import com.smartcampus.server.entity.Ticket;
 import com.smartcampus.server.entity.TicketAttachment;
 import com.smartcampus.server.entity.TicketComment;
-import com.smartcampus.server.entity.User;
+import com.smartcampus.server.model.User;
 import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
@@ -48,7 +48,6 @@ public class IncidentServiceImpl implements IncidentService {
     private final UserRepository userRepository;
     private final FileStorageUtil fileStorageUtil;
 
-    // Defines which status transitions are legal
     private static final Map<TicketStatus, Set<TicketStatus>> VALID_TRANSITIONS = Map.of(
             TicketStatus.OPEN,        Set.of(TicketStatus.IN_PROGRESS, TicketStatus.REJECTED),
             TicketStatus.IN_PROGRESS, Set.of(TicketStatus.RESOLVED, TicketStatus.OPEN),
@@ -58,7 +57,7 @@ public class IncidentServiceImpl implements IncidentService {
     );
 
     @Override
-    public TicketResponse createTicket(CreateTicketRequest request, UUID currentUserId) {
+    public TicketResponse createTicket(CreateTicketRequest request, Long currentUserId) {
         User reporter = findUser(currentUserId);
 
         Ticket ticket = Ticket.builder()
@@ -85,7 +84,7 @@ public class IncidentServiceImpl implements IncidentService {
     @Transactional(readOnly = true)
     public Page<TicketSummaryResponse> getAllTickets(
             TicketStatus status, TicketCategory category, TicketPriority priority,
-            UUID currentUserId, String currentUserRole, Pageable pageable) {
+            Long currentUserId, String currentUserRole, Pageable pageable) {
 
         if (isAdminOrTechnician(currentUserRole)) {
             return ticketRepository
@@ -99,10 +98,10 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     @Transactional(readOnly = true)
-    public TicketResponse getTicket(UUID ticketId, UUID currentUserId, String currentUserRole) {
+    public TicketResponse getTicket(UUID ticketId, Long currentUserId, String currentUserRole) {
         Ticket ticket = findTicket(ticketId);
         if (!isAdminOrTechnician(currentUserRole)
-                && !ticket.getReportedBy().getId().equals(currentUserId)) {
+                && !ticket.getReportedBy().getUserId().equals(currentUserId)) {
             throw new AccessDeniedException("You do not have access to this ticket");
         }
         return TicketResponse.from(ticket);
@@ -110,7 +109,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public TicketResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request,
-                                              UUID currentUserId, String currentUserRole) {
+                                              Long currentUserId, String currentUserRole) {
         Ticket ticket = findTicket(ticketId);
         TicketStatus newStatus = request.getStatus();
 
@@ -149,7 +148,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public void deleteTicket(UUID ticketId, String currentUserRole) {
-        if (!"ADMIN".equals(currentUserRole)) {
+        if (!"ROLE_ADMIN".equals(currentUserRole)) {
             throw new AccessDeniedException("Only admin can delete tickets");
         }
         ticketRepository.delete(findTicket(ticketId));
@@ -157,10 +156,10 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public AttachmentResponse uploadAttachment(UUID ticketId, MultipartFile file,
-                                                UUID currentUserId) throws IOException {
+                                                Long currentUserId) throws IOException {
         Ticket ticket = findTicket(ticketId);
 
-        if (!ticket.getReportedBy().getId().equals(currentUserId)) {
+        if (!ticket.getReportedBy().getUserId().equals(currentUserId)) {
             throw new AccessDeniedException("Only the ticket owner can upload attachments");
         }
         if (attachmentRepository.countByTicketId(ticketId) >= 3) {
@@ -181,11 +180,11 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public void deleteAttachment(UUID ticketId, UUID attachmentId,
-                                  UUID currentUserId, String currentUserRole) throws IOException {
+                                  Long currentUserId, String currentUserRole) throws IOException {
         TicketAttachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
 
-        boolean isOwner = attachment.getTicket().getReportedBy().getId().equals(currentUserId);
+        boolean isOwner = attachment.getTicket().getReportedBy().getUserId().equals(currentUserId);
         if (!isOwner && !isAdminOrTechnician(currentUserRole)) {
             throw new AccessDeniedException("You cannot delete this attachment");
         }
@@ -216,7 +215,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public CommentResponse addComment(UUID ticketId, CreateCommentRequest request,
-                                       UUID currentUserId) {
+                                       Long currentUserId) {
         Ticket ticket = findTicket(ticketId);
         User author = findUser(currentUserId);
 
@@ -231,9 +230,9 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public CommentResponse updateComment(UUID ticketId, UUID commentId,
-                                          CreateCommentRequest request, UUID currentUserId) {
+                                          CreateCommentRequest request, Long currentUserId) {
         TicketComment comment = findComment(commentId);
-        if (!comment.getAuthor().getId().equals(currentUserId)) {
+        if (!comment.getAuthor().getUserId().equals(currentUserId)) {
             throw new AccessDeniedException("You can only edit your own comments");
         }
         comment.setContent(request.getContent());
@@ -242,10 +241,10 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public void deleteComment(UUID ticketId, UUID commentId,
-                               UUID currentUserId, String currentUserRole) {
+                               Long currentUserId, String currentUserRole) {
         TicketComment comment = findComment(commentId);
-        boolean isOwner = comment.getAuthor().getId().equals(currentUserId);
-        if (!isOwner && !"ADMIN".equals(currentUserRole)) {
+        boolean isOwner = comment.getAuthor().getUserId().equals(currentUserId);
+        if (!isOwner && !"ROLE_ADMIN".equals(currentUserRole)) {
             throw new AccessDeniedException("You can only delete your own comments");
         }
         commentRepository.delete(comment);
@@ -258,7 +257,7 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + id));
     }
 
-    private User findUser(UUID id) {
+    private User findUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }
@@ -269,7 +268,7 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     private boolean isAdminOrTechnician(String role) {
-        return "ADMIN".equals(role) || "TECHNICIAN".equals(role);
+        return "ROLE_ADMIN".equals(role) || "ROLE_TECHNICIAN".equals(role);
     }
 
     private void validateTransition(TicketStatus current, TicketStatus next) {

@@ -9,5 +9,5 @@ import java.util.UUID;
 public class AssignTicketRequest {
 
     @NotNull(message = "Technician ID is required")
-    private UUID technicianId;
+    private Long technicianId;
 }

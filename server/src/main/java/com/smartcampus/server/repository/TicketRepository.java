@@ -38,7 +38,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             AND (:category IS NULL OR t.category = :category)
             """)
     Page<Ticket> findByUserWithFilters(
-            @Param("userId") UUID userId,
+            @Param("userId") Long userId,
             @Param("status") TicketStatus status,
             @Param("category") TicketCategory category,
             Pageable pageable
