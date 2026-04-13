@@ -1,5 +1,6 @@
 package com.smartcampus.server.entity;
 
+import com.smartcampus.server.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

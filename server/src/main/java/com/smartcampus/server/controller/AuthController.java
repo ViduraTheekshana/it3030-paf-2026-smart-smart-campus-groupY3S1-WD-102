@@ -1,0 +1,91 @@
+package com.smartcampus.server.controller;
+
+import com.smartcampus.server.dto.AuthResponse;
+import com.smartcampus.server.dto.ForgotPasswordOtpRequest;
+import com.smartcampus.server.dto.ForgotPasswordRequest;
+import com.smartcampus.server.dto.LoginRequest;
+import com.smartcampus.server.dto.RegisterRequest;
+import com.smartcampus.server.dto.ResetPasswordRequest;
+import com.smartcampus.server.dto.ResetPasswordWithOtpRequest;
+import com.smartcampus.server.dto.VerifyOtpRequest;
+import com.smartcampus.server.service.AuthService;
+import com.smartcampus.server.service.PasswordOtpService;
+import jakarta.validation.Valid;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final AuthService authService;
+    private final PasswordOtpService passwordOtpService;
+
+    public AuthController(AuthService authService, PasswordOtpService passwordOtpService) {
+        this.authService = authService;
+        this.passwordOtpService = passwordOtpService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
+
+    // Old token-based forgot password flow
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        String token = authService.forgotPassword(request);
+
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("message", "If an account exists with that email, a password reset link has been generated.");
+
+        if (token != null) {
+            response.put("resetToken", token);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Old token-based reset password flow
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Password reset successful."));
+    }
+
+    // New OTP-based forgot password flow
+    @PostMapping("/forgot-password/send-otp")
+    public ResponseEntity<Map<String, String>> sendOtp(@Valid @RequestBody ForgotPasswordOtpRequest request) {
+        passwordOtpService.sendOtp(request);
+        return ResponseEntity.ok(Map.of("message", "OTP sent to email."));
+    }
+
+    @PostMapping("/forgot-password/verify-otp")
+    public ResponseEntity<Map<String, String>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        passwordOtpService.verifyOtp(request);
+        return ResponseEntity.ok(Map.of("message", "OTP verified successfully."));
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public ResponseEntity<Map<String, String>> resetPasswordWithOtp(
+            @Valid @RequestBody ResetPasswordWithOtpRequest request) {
+        passwordOtpService.resetPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Password reset successful."));
+    }
+
+    @GetMapping("/oauth2/urls")
+    public ResponseEntity<Object> getOauth2Urls() {
+        return ResponseEntity.ok(Map.of(
+                "google", "/oauth2/authorization/google",
+                "facebook", "/oauth2/authorization/facebook"
+        ));
+    }
+}

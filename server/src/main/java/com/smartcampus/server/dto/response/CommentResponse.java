@@ -13,7 +13,7 @@ public class CommentResponse {
 
     private UUID id;
     private UUID ticketId;
-    private UUID authorId;
+    private Long authorId;
     private String authorName;
     private String content;
     private LocalDateTime createdAt;
@@ -23,8 +23,8 @@ public class CommentResponse {
         return CommentResponse.builder()
                 .id(c.getId())
                 .ticketId(c.getTicket().getId())
-                .authorId(c.getAuthor().getId())
-                .authorName(c.getAuthor().getName())
+                .authorId(c.getAuthor().getUserId())
+                .authorName(c.getAuthor().getFullName())
                 .content(c.getContent())
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())

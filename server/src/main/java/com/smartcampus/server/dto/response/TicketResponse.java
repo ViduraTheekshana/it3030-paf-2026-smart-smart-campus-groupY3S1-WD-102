@@ -5,6 +5,7 @@ import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
 import com.smartcampus.server.model.Resource;
+import com.smartcampus.server.model.User;
 import lombok.Builder;
 import lombok.Data;
 
@@ -28,9 +29,9 @@ public class TicketResponse {
     private String rejectionReason;
     private Long resourceId;
     private String resourceName;
-    private UUID reportedById;
+    private Long reportedById;
     private String reportedByName;
-    private UUID assignedToId;
+    private Long assignedToId;
     private String assignedToName;
     private List<AttachmentResponse> attachments;
     private List<CommentResponse> comments;
@@ -51,10 +52,10 @@ public class TicketResponse {
                 .rejectionReason(t.getRejectionReason())
                 .resourceId(t.getResource() != null ? t.getResource().getResourceID() : null)
                 .resourceName(t.getResource() != null ? t.getResource().getName() : null)
-                .reportedById(t.getReportedBy().getId())
-                .reportedByName(t.getReportedBy().getName())
-                .assignedToId(t.getAssignedTo() != null ? t.getAssignedTo().getId() : null)
-                .assignedToName(t.getAssignedTo() != null ? t.getAssignedTo().getName() : null)
+                .reportedById(t.getReportedBy().getUserId())
+                .reportedByName(t.getReportedBy().getFullName())
+                .assignedToId(t.getAssignedTo() != null ? t.getAssignedTo().getUserId() : null)
+                .assignedToName(t.getAssignedTo() != null ? t.getAssignedTo().getFullName() : null)
                 .attachments(t.getAttachments().stream().map(AttachmentResponse::from).toList())
                 .comments(t.getComments().stream().map(CommentResponse::from).toList())
                 .createdAt(t.getCreatedAt())
