@@ -20,9 +20,10 @@ public class BookingController {
     @PostMapping
     public Booking create(
         @RequestBody Booking booking,
-        @RequestParam Long resourceID
+        @RequestParam Long resourceID,
+        @RequestParam Long userId
     ) {
-        return service.createBooking(booking, resourceID);
+        return service.createBooking(booking, resourceID, userId);
     }
 
     // GET ALL
