@@ -1,5 +1,4 @@
 package com.smartcampus.server.controller;
-
 import com.smartcampus.server.dto.AuthResponse;
 import com.smartcampus.server.dto.ForgotPasswordOtpRequest;
 import com.smartcampus.server.dto.ForgotPasswordRequest;
@@ -7,9 +6,11 @@ import com.smartcampus.server.dto.LoginRequest;
 import com.smartcampus.server.dto.RegisterRequest;
 import com.smartcampus.server.dto.ResetPasswordRequest;
 import com.smartcampus.server.dto.ResetPasswordWithOtpRequest;
+import com.smartcampus.server.dto.FirebaseAuthRequest;
 import com.smartcampus.server.dto.VerifyOtpRequest;
 import com.smartcampus.server.service.AuthService;
 import com.smartcampus.server.service.PasswordOtpService;
+import com.smartcampus.server.service.FirebaseAuthenticationService;
 import jakarta.validation.Valid;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,12 +24,15 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordOtpService passwordOtpService;
+    private final FirebaseAuthenticationService firebaseAuthenticationService;
 
-    public AuthController(AuthService authService, PasswordOtpService passwordOtpService) {
+    public AuthController(AuthService authService,
+                          PasswordOtpService passwordOtpService,
+                          FirebaseAuthenticationService firebaseAuthenticationService) {
         this.authService = authService;
         this.passwordOtpService = passwordOtpService;
+        this.firebaseAuthenticationService = firebaseAuthenticationService;
     }
-
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
@@ -37,6 +41,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/firebase")
+    public ResponseEntity<AuthResponse> firebaseLogin(@Valid @RequestBody FirebaseAuthRequest request) {
+        return ResponseEntity.ok(firebaseAuthenticationService.authenticate(request));
     }
 
     // Old token-based forgot password flow
