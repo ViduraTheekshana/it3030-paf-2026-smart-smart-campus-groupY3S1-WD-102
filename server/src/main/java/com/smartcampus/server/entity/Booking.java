@@ -4,6 +4,8 @@ package com.smartcampus.server.entity;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import com.smartcampus.server.model.Resource;
+import com.smartcampus.server.model.User;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -21,12 +23,19 @@ public class Booking {
     private LocalTime startTime;
     private LocalTime endTime;
 
+
+    //RELATIONSHIP
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // RELATIONSHIP
     @ManyToOne
     @JoinColumn(name = "resourceID")
     private Resource resource;
 
     public Booking() {}
+    
 
     public Long getBookingId() { return bookingId; }
     public void setBookingId(Long bookingId) { this.bookingId = bookingId;}
@@ -54,4 +63,7 @@ public class Booking {
 
     public Resource getResource() { return resource; }
     public void setResource(Resource resource) { this.resource = resource; }
+
+    public User getUser() {return user; }
+    public void setUser(User user) {this.user = user; }
 }
