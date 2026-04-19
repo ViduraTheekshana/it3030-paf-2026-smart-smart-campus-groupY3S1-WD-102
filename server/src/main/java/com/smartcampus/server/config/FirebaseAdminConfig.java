@@ -31,6 +31,9 @@ public class FirebaseAdminConfig {
 
     @PostConstruct
     public void initializeFirebase() throws IOException {
+        final java.util.logging.Logger logger =
+                java.util.logging.Logger.getLogger(FirebaseAdminConfig.class.getName());
+
         if (!FirebaseApp.getApps().isEmpty()) {
             return;
         }
@@ -49,6 +52,6 @@ public class FirebaseAdminConfig {
                 .build();
 
         FirebaseApp.initializeApp(options);
-        System.out.println("Firebase Application has been initialized successfully.");
+        logger.info("Firebase Admin SDK initialized successfully");
     }
 }
