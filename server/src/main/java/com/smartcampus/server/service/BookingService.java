@@ -1,6 +1,7 @@
 package com.smartcampus.server.service;
 
 import com.smartcampus.server.entity.Booking;
+import com.smartcampus.server.event.BookingStatusChangedEvent;
 import com.smartcampus.server.model.Resource;
 import com.smartcampus.server.model.User;
 import com.smartcampus.server.repository.BookingRepository;
@@ -8,6 +9,7 @@ import com.smartcampus.server.repository.ResourceRepository;
 import com.smartcampus.server.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -19,6 +21,9 @@ public class BookingService {
 
     @Autowired
     private ResourceRepository resourceRepository;
+    //Notification Part
+    @Autowired
+private ApplicationEventPublisher publisher;
 
     @Autowired
     private UserRepository userRepository;
@@ -95,11 +100,15 @@ public class BookingService {
         bookingRepository.deleteById(id);
     }
 
-    // APPROVE
+     // APPROVE
     public Booking approveBooking(Long id) {
         Booking booking = getBooking(id);
         booking.setStatus("APPROVED");
-        return bookingRepository.save(booking);
+
+        Booking saved = bookingRepository.save(booking);
+        publisher.publishEvent(new BookingStatusChangedEvent(saved));
+
+        return saved;
     }
 
     // REJECT
@@ -107,6 +116,10 @@ public class BookingService {
         Booking booking = getBooking(id);
         booking.setStatus("REJECTED");
         booking.setRejectReason(reason);
-        return bookingRepository.save(booking);
+
+        Booking saved = bookingRepository.save(booking);
+        publisher.publishEvent(new BookingStatusChangedEvent(saved));
+
+        return saved;
     }
 }
