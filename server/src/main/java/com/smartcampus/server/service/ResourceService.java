@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceService {
@@ -67,5 +69,20 @@ public class ResourceService {
 
     public List<Resource> filterByLocation(String location) {
         return repo.findByLocation(location);
+    }
+
+    public long countAll() {
+        return repo.count();
+    }
+
+    public long countByStatus(String status) {
+        return repo.findAll().stream()
+                .filter(r -> r.getStatus().equalsIgnoreCase(status))
+                .count();
+    }
+
+    public Map<String, Long> countByType() {
+        return repo.findAll().stream()
+                .collect(Collectors.groupingBy(Resource::getType, Collectors.counting()));
     }
 }
