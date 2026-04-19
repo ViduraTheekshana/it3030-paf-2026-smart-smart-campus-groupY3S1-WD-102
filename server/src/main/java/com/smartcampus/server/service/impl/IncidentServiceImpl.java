@@ -37,6 +37,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
+import com.smartcampus.server.event.TicketStatusChangedEvent;
+import com.smartcampus.server.event.CommentCreatedEvent;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,7 +50,9 @@ public class IncidentServiceImpl implements IncidentService {
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketCommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final FileStorageUtil fileStorageUtil;
+    private final FileStorageUtil fileStorageUtil; 
+    //Notification Part
+    private final ApplicationEventPublisher publisher;
 
     private static final Map<TicketStatus, Set<TicketStatus>> VALID_TRANSITIONS = Map.of(
             TicketStatus.OPEN,        Set.of(TicketStatus.IN_PROGRESS, TicketStatus.REJECTED),
@@ -109,28 +115,32 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public TicketResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request,
-                                              Long currentUserId, String currentUserRole) {
-        Ticket ticket = findTicket(ticketId);
-        TicketStatus newStatus = request.getStatus();
+                                         Long currentUserId, String currentUserRole) {
+    Ticket ticket = findTicket(ticketId);
+    TicketStatus newStatus = request.getStatus();
 
-        validateTransition(ticket.getStatus(), newStatus);
+    validateTransition(ticket.getStatus(), newStatus);
 
-        if (newStatus == TicketStatus.REJECTED && !isAdminOrTechnician(currentUserRole)) {
-            throw new AccessDeniedException("Only admin or technician can reject a ticket");
-        }
-
-        ticket.setStatus(newStatus);
-
-        if (newStatus == TicketStatus.RESOLVED && request.getResolutionNotes() != null) {
-            ticket.setResolutionNotes(request.getResolutionNotes());
-        }
-        if (newStatus == TicketStatus.REJECTED && request.getRejectionReason() != null) {
-            ticket.setRejectionReason(request.getRejectionReason());
-        }
-
-        return TicketResponse.from(ticketRepository.save(ticket));
+    if (newStatus == TicketStatus.REJECTED && !isAdminOrTechnician(currentUserRole)) {
+        throw new AccessDeniedException("Only admin or technician can reject a ticket");
     }
 
+    ticket.setStatus(newStatus);
+
+    if (newStatus == TicketStatus.RESOLVED && request.getResolutionNotes() != null) {
+        ticket.setResolutionNotes(request.getResolutionNotes());
+    }
+
+    if (newStatus == TicketStatus.REJECTED && request.getRejectionReason() != null) {
+        ticket.setRejectionReason(request.getRejectionReason());
+    }
+
+    Ticket saved = ticketRepository.save(ticket);
+
+    publisher.publishEvent(new TicketStatusChangedEvent(saved));
+
+    return TicketResponse.from(saved);
+}
     @Override
     public TicketResponse assignTicket(UUID ticketId, AssignTicketRequest request,
                                         String currentUserRole) {
@@ -214,41 +224,45 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
-    public CommentResponse addComment(UUID ticketId, CreateCommentRequest request,
-                                       Long currentUserId) {
-        Ticket ticket = findTicket(ticketId);
-        User author = findUser(currentUserId);
+public CommentResponse addComment(UUID ticketId, CreateCommentRequest request,
+                                  Long currentUserId) {
+    Ticket ticket = findTicket(ticketId);
+    User author = findUser(currentUserId);
 
-        TicketComment comment = TicketComment.builder()
-                .ticket(ticket)
-                .author(author)
-                .content(request.getContent())
-                .build();
+    TicketComment comment = TicketComment.builder()
+            .ticket(ticket)
+            .author(author)
+            .content(request.getContent())
+            .build();
 
-        return CommentResponse.from(commentRepository.save(comment));
+    TicketComment saved = commentRepository.save(comment);
+
+    publisher.publishEvent(new CommentCreatedEvent(saved));
+
+    return CommentResponse.from(saved);
+}
+
+@Override
+public CommentResponse updateComment(UUID ticketId, UUID commentId,
+                                     CreateCommentRequest request, Long currentUserId) {
+    TicketComment comment = findComment(commentId);
+    if (!comment.getAuthor().getUserId().equals(currentUserId)) {
+        throw new AccessDeniedException("You can only edit your own comments");
     }
+    comment.setContent(request.getContent());
+    return CommentResponse.from(commentRepository.save(comment));
+}
 
-    @Override
-    public CommentResponse updateComment(UUID ticketId, UUID commentId,
-                                          CreateCommentRequest request, Long currentUserId) {
-        TicketComment comment = findComment(commentId);
-        if (!comment.getAuthor().getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You can only edit your own comments");
-        }
-        comment.setContent(request.getContent());
-        return CommentResponse.from(commentRepository.save(comment));
+@Override
+public void deleteComment(UUID ticketId, UUID commentId,
+                          Long currentUserId, String currentUserRole) {
+    TicketComment comment = findComment(commentId);
+    boolean isOwner = comment.getAuthor().getUserId().equals(currentUserId);
+    if (!isOwner && !"ROLE_ADMIN".equals(currentUserRole)) {
+        throw new AccessDeniedException("You can only delete your own comments");
     }
-
-    @Override
-    public void deleteComment(UUID ticketId, UUID commentId,
-                               Long currentUserId, String currentUserRole) {
-        TicketComment comment = findComment(commentId);
-        boolean isOwner = comment.getAuthor().getUserId().equals(currentUserId);
-        if (!isOwner && !"ROLE_ADMIN".equals(currentUserRole)) {
-            throw new AccessDeniedException("You can only delete your own comments");
-        }
-        commentRepository.delete(comment);
-    }
+    commentRepository.delete(comment);
+}
 
     // private helpers
 
@@ -278,3 +292,4 @@ public class IncidentServiceImpl implements IncidentService {
         }
     }
 }
+
