@@ -29,6 +29,12 @@ export default function Sidebar() {
       section: "userManagement"
     },
     { 
+      icon: FolderOpen, 
+      label: "Resource Management", 
+      path: "/admin",
+      section: "resourceManagement"
+    },
+    { 
       icon: Calendar, 
       label: "Booking Management", 
       path: "/bookings",
@@ -40,12 +46,6 @@ export default function Sidebar() {
       path: "/tickets",
       section: "ticketManagement"
     },
-  ];
-
-  const resourceManagementItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: FolderOpen, label: "Resources", path: "/admin" },
-    { icon: PlusCircle, label: "Add Resource", path: "/add" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -71,85 +71,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="p-4">
         <ul className="space-y-2">
-          {/* User Management Section */}
-          {menuItems.filter(item => item.section === 'userManagement').map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                    isActive(item.path)
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'hover:bg-slate-700 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 ${isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  {!isCollapsed && (
-                    <span className={`font-medium ${isActive(item.path) ? 'text-white' : ''}`}>
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-
-          {/* Resource Management Section */}
-          <li>
-            <button
-              onClick={() => setExpandedSections(prev => ({
-                ...prev,
-                resourceManagement: !prev.resourceManagement
-              }))}
-              className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 ${
-                expandedSections.resourceManagement
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                  : 'hover:bg-slate-700 text-slate-300 hover:text-white'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <FolderOpen className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && (
-                  <span className="font-medium whitespace-nowrap">Resource Management</span>
-                )}
-              </div>
-              {!isCollapsed && (
-                expandedSections.resourceManagement ? 
-                  <ChevronDown className="w-4 h-4" /> : 
-                  <ChevronRight className="w-4 h-4" />
-              )}
-            </button>
-            
-            {/* Sub-items */}
-            {expandedSections.resourceManagement && !isCollapsed && (
-              <ul className="mt-2 space-y-1 pl-4">
-                {resourceManagementItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 group ${
-                          isActive(item.path)
-                            ? 'bg-blue-500/20 text-blue-300 border-l-2 border-blue-400'
-                            : 'hover:bg-slate-700/50 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        <Icon className={`w-4 h-4 ${isActive(item.path) ? 'text-blue-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                        <span className={`text-sm ${isActive(item.path) ? 'text-blue-300 font-medium' : ''}`}>
-                          {item.label}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </li>
-
-          {/* Other Menu Items */}
-          {menuItems.filter(item => item.section !== 'userManagement').map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <li key={item.path}>
