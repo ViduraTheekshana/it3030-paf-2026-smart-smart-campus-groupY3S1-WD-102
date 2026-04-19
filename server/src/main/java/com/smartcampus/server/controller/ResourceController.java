@@ -5,9 +5,15 @@ import com.smartcampus.server.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/resources")
 public class ResourceController {
 
@@ -69,5 +75,34 @@ public class ResourceController {
     @GetMapping("/filter/location")
     public List<Resource> filterByLocation(@RequestParam String location) {
         return service.filterByLocation(location);
+    }
+
+    @GetMapping("/summary")
+    public Map<String, Object> getSummary() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", service.countAll());
+        data.put("active", service.countByStatus("ACTIVE"));
+        data.put("inactive", service.countByStatus("OUT_OF_SERVICE"));
+        data.put("types", service.countByType());
+        return data;
+    }
+
+    
+
+    @PostMapping("/upload")
+    public String uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String folder = "uploads/";
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+
+            Path path = Paths.get(folder + filename);
+            Files.createDirectories(path.getParent());
+            Files.write(path, file.getBytes());
+
+            return "http://localhost:8080/uploads/" + filename;
+
+        } catch (Exception e) {
+            return "Upload failed";
+        }
     }
 }

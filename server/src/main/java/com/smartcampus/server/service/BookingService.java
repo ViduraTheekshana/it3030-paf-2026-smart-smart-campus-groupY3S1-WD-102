@@ -3,8 +3,10 @@ package com.smartcampus.server.service;
 import com.smartcampus.server.entity.Booking;
 import com.smartcampus.server.event.BookingStatusChangedEvent;
 import com.smartcampus.server.model.Resource;
+import com.smartcampus.server.model.User;
 import com.smartcampus.server.repository.BookingRepository;
 import com.smartcampus.server.repository.ResourceRepository;
+import com.smartcampus.server.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,12 +25,19 @@ public class BookingService {
     @Autowired
 private ApplicationEventPublisher publisher;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // CREATE BOOKING
-    public Booking createBooking(Booking booking, Long resourceID) {
+    public Booking createBooking(Booking booking, Long resourceID, Long userId) {
         
         //Get resource
         Resource resource = resourceRepository.findById(resourceID)
                 .orElseThrow(() -> new RuntimeException("Resource not found"));
+
+        // get user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Check resource status
         if (!"ACTIVE".equalsIgnoreCase(resource.getStatus())) {
@@ -56,6 +65,7 @@ private ApplicationEventPublisher publisher;
 
         // Set values
         booking.setResource(resource);
+        booking.setUser(user);
         booking.setStatus("PENDING");
 
         return bookingRepository.save(booking);
