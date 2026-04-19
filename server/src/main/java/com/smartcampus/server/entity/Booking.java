@@ -3,6 +3,7 @@ package com.smartcampus.server.entity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+
 import com.smartcampus.server.model.Resource;
 import com.smartcampus.server.model.User;
 
@@ -26,7 +27,7 @@ public class Booking {
 
     //RELATIONSHIP
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "userId")
     private User user;
 
     // RELATIONSHIP
