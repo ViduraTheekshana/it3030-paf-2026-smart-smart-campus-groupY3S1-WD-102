@@ -3,9 +3,12 @@ package com.smartcampus.server.model;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 
-//import jakarta.persistence.OneToMany;
-//import com.fasterxml.jackson.annotation.JsonIgnore;
-//import java.util.List;
+import jakarta.persistence.OneToMany;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.smartcampus.server.entity.Booking;
+import com.smartcampus.server.entity.Ticket;
+
+import java.util.List;
 
 
 @Entity
@@ -14,15 +17,15 @@ public class Resource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long resourceID;
-/* 
-@OneToMany(mappedBy = "resource")
+
+    @OneToMany(mappedBy = "resource")
     @JsonIgnore
     private List<Booking> bookings;
 
     @OneToMany(mappedBy = "resource")
     @JsonIgnore
     private List<Ticket> tickets;
-*/
+
     
 
     private String name;
