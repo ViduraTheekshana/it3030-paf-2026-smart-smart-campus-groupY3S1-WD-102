@@ -3,12 +3,42 @@ name: Smart Campus CI
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  build:
-    name: Build & Quality Check
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            server:
+              - 'server/**'
+            client:
+              - 'client/**'
+
+  server:
+    name: Server — Build & Quality Check
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +52,51 @@ jobs:
           distribution: "temurin"
           cache: maven
 
+      - name: Create resources directory
+        run: mkdir -p src/main/resources
+        working-directory: server
+
+      - name: Create stub application.properties for CI
+        run: |
+          cat > src/main/resources/application.properties << 'EOF'
+          spring.application.name=server
+
+          spring.datasource.url=${{ secrets.DB_URL }}
+          spring.datasource.username=${{ secrets.DB_USERNAME }}
+          spring.datasource.password=${{ secrets.DB_PASSWORD }}
+          spring.datasource.driver-class-name=org.postgresql.Driver
+
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.jpa.show-sql=false
+          spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+          spring.mail.host=smtp.gmail.com
+          spring.mail.port=587
+          spring.mail.username=${{ secrets.MAIL_USERNAME }}
+          spring.mail.password=${{ secrets.MAIL_PASSWORD }}
+          spring.mail.properties.mail.smtp.auth=true
+          spring.mail.properties.mail.smtp.starttls.enable=true
+
+          app.jwt.secret=${{ secrets.JWT_SECRET }}
+          app.jwt.expiration-ms=86400000
+
+          app.firebase.project-id=${{ secrets.FIREBASE_PROJECT_ID }}
+          app.firebase.private-key=${{ secrets.FIREBASE_PRIVATE_KEY }}
+          app.firebase.private-key-id=${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
+          app.firebase.client-id=${{ secrets.FIREBASE_CLIENT_ID }}
+          app.firebase.client-email=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+
+          app.file.upload-dir=uploads
+          spring.servlet.multipart.max-file-size=5MB
+          spring.servlet.multipart.max-request-size=5MB
+
+          spring.flyway.enabled=false
+          spring.docker.compose.enabled=false
+          server.port=8081
+          spring.jpa.open-in-view=false
+          EOF
+        working-directory: server
+
       - name: Make mvnw executable
         run: chmod +x mvnw
         working-directory: server
@@ -33,3 +108,36 @@ jobs:
       - name: Checkstyle
         run: ./mvnw checkstyle:check -B
         working-directory: server
+
+  client:
+    name: Client — Build Check
+    needs: changes
+    if: needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Create stub .env for CI
+        run: |
+          cat > .env << 'EOF'
+          VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          EOF
+        working-directory: client
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Build
+        run: npm run build
+        working-directory: client

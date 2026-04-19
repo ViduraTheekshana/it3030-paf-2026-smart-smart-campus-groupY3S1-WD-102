@@ -1,37 +1,57 @@
 package com.smartcampus.server.config;
+
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.auth.oauth2.GoogleCredentials;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class FirebaseAdminConfig {
 
-    @Value("${app.firebase.credentials-path:}")
-    private String credentialsPath;
+    @Value("${app.firebase.project-id}")
+    private String projectId;
+
+    @Value("${app.firebase.client-email}")
+    private String clientEmail;
+
+    @Value("${app.firebase.private-key}")
+    private String privateKey;
+
+    @Value("${app.firebase.private-key-id}")
+    private String privateKeyId;
+
+    @Value("${app.firebase.client-id}")
+    private String clientId;
 
     @PostConstruct
     public void initializeFirebase() throws IOException {
+        final java.util.logging.Logger logger =
+                java.util.logging.Logger.getLogger(FirebaseAdminConfig.class.getName());
+
         if (!FirebaseApp.getApps().isEmpty()) {
             return;
         }
 
-        FirebaseOptions.Builder builder = FirebaseOptions.builder();
+        String formattedKey = privateKey.replace("\\n", "\n");
 
-        if (credentialsPath != null && !credentialsPath.isBlank()) {
-            try (InputStream inputStream = Files.newInputStream(Path.of(credentialsPath))) {
-                builder.setCredentials(GoogleCredentials.fromStream(inputStream));
-            }
-        } else {
-            builder.setCredentials(GoogleCredentials.getApplicationDefault());
-        }
+        FirebaseOptions options = FirebaseOptions.builder()
+                .setCredentials(ServiceAccountCredentials.fromPkcs8(
+                        clientId,
+                        clientEmail,
+                        formattedKey,
+                        privateKeyId,
+                        null
+                ))
+                .setProjectId(projectId)
+                .build();
 
-        FirebaseApp.initializeApp(builder.build());
+        FirebaseApp.initializeApp(options);
+        logger.info("Firebase Admin SDK initialized successfully");
     }
 }
