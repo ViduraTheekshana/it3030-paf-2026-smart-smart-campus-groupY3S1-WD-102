@@ -13,9 +13,11 @@ import com.smartcampus.server.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Random;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class PasswordOtpService {
 
     private final UserRepository userRepository;
