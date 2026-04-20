@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class FirebaseAuthRequest {
 
-    @NotBlank
+    @NotBlank(message = "Firebase token is required")
     private String idToken;
 
     public String getIdToken() {
