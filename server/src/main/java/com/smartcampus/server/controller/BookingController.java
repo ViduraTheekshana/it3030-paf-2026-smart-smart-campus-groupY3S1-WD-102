@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+
+
 @RestController
 @RequestMapping("/api/bookings")
 @CrossOrigin
@@ -21,9 +24,9 @@ public class BookingController {
     public Booking create(
         @RequestBody Booking booking,
         @RequestParam Long resourceID,
-        @RequestParam Long userId
+        Authentication authentication
     ) {
-        return service.createBooking(booking, resourceID, userId);
+        return service.createBooking(booking, resourceID, authentication);  
     }
 
     // GET ALL
