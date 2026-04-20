@@ -15,8 +15,11 @@ import jakarta.validation.Valid;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,15 +42,59 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
-    }
+public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+
+    AuthResponse response = authService.login(request);
+
+    String token = response.getAccessToken(); // make sure this exists
+
+    ResponseCookie cookie = ResponseCookie.from("token", token)
+            .httpOnly(true)
+            .secure(false) // change to true in production
+            .path("/")
+            .maxAge(60 * 60 * 24) // 1 day
+            .sameSite("Lax")
+            .build();
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(Map.of("message", "Login successful"));
+}
 
     @PostMapping("/firebase")
-    public ResponseEntity<AuthResponse> firebaseLogin(@Valid @RequestBody FirebaseAuthRequest request) {
-        return ResponseEntity.ok(firebaseAuthenticationService.authenticate(request));
-    }
+public ResponseEntity<?> firebaseLogin(@Valid @RequestBody FirebaseAuthRequest request) {
 
+    AuthResponse response = firebaseAuthenticationService.authenticate(request);
+
+    String token = response.getAccessToken();
+
+    ResponseCookie cookie = ResponseCookie.from("token", token)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .maxAge(60 * 60 * 24)
+            .sameSite("Lax")
+            .build();
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(Map.of("message", "Login successful"));
+}
+
+@PostMapping("/logout")
+public ResponseEntity<?> logout() {
+
+    ResponseCookie cookie = ResponseCookie.from("token", "")
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .maxAge(0)
+            .build();
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(Map.of("message", "Logged out"));
+}
     // Old token-based forgot password flow
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
