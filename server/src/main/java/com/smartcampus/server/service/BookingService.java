@@ -11,6 +11,7 @@ import com.smartcampus.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 import java.util.List;
 
 @Service
@@ -23,22 +24,24 @@ public class BookingService {
     private ResourceRepository resourceRepository;
     //Notification Part
     @Autowired
-private ApplicationEventPublisher publisher;
+    private ApplicationEventPublisher publisher;
 
     @Autowired
     private UserRepository userRepository;
 
     // CREATE BOOKING
-    public Booking createBooking(Booking booking, Long resourceID, Long userId) {
+    public Booking createBooking(Booking booking, Long resourceID, Authentication authentication) {
+
+        // Get authenticated user from SecurityContext
+        String email = authentication.getName(); // Get username/email from authentication
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         
         //Get resource
         Resource resource = resourceRepository.findById(resourceID)
                 .orElseThrow(() -> new RuntimeException("Resource not found"));
 
-        // get user
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
+        
         // Check resource status
         if (!"ACTIVE".equalsIgnoreCase(resource.getStatus())) {
             throw new RuntimeException("Resource is not available");
