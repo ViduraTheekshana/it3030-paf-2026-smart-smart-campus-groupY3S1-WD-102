@@ -28,6 +28,9 @@ public interface IncidentService {
 
     TicketResponse getTicket(UUID ticketId, Long currentUserId, String currentUserRole);
 
+    TicketResponse updateTicketDetails(UUID ticketId, CreateTicketRequest request,
+                                       Long currentUserId, String currentUserRole);
+
     TicketResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request,
                                       Long currentUserId, String currentUserRole);
 
