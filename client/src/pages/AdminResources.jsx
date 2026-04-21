@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAll, remove, getSummary } from "../api/ResourceAPI";
 import ResourceModal from "../components/AdminResourceModal";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 import { 
   Search, 
   Plus, 
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 export default function AdminResources() {
+  const { user, isAdmin } = useAuth();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -87,9 +89,8 @@ export default function AdminResources() {
 
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
-
-      <div className="ml-64 flex-1 p-8">
+    <div className="flex-1 bg-gray-50 min-h-screen">
+      <div className="p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div 
