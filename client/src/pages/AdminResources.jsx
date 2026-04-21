@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getAll, remove, getSummary } from "../api/ResourceAPI";
-import Sidebar from "../components/SideBar";
 import ResourceModal from "../components/AdminResourceModal";
 import { motion } from "framer-motion";
 import { 
@@ -86,20 +85,9 @@ export default function AdminResources() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex">
-        <Sidebar />
-        <div className="ml-64 p-8 w-full flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex bg-gray-50 min-h-screen">
-      <Sidebar />
 
       <div className="ml-64 flex-1 p-8">
         <div className="max-w-7xl mx-auto">

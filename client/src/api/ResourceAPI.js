@@ -39,8 +39,8 @@ export const filterResources = async (filters) => {
 };
 
 // DASHBOARD SUMMARY
-export const summary = async () => {
-	return await axios.get(`${BASE}/summary`);
+export const getSummary = async () => {
+  return await axios.get(`${BASE}/summary`);
 };
 
 // IMAGE UPLOAD
