@@ -102,7 +102,7 @@ export function NotificationPanel() {
 														</p>
 													</div>
 													{!notification.read && (
-														<div className="h-2 w-2 bg-brand-600 rounded-full flex-shrink-0 mt-2"></div>
+														<div className="h-2 w-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
 													)}
 												</div>
 											</div>
