@@ -16,7 +16,6 @@ export function NotificationProvider({ children }) {
 		if (!user) return;
 		try {
 			const data = await getNotifications();
-			console.log("Fetched notifications from context:", data);
 			setNotifications(data);
 			setUnreadCount(data.filter((n) => !n.read).length);
 		} catch (error) {
@@ -28,7 +27,7 @@ export function NotificationProvider({ children }) {
 		try {
 			await markNotificationRead(id);
 		} catch (error) {
-			// Demo mode - just update locally
+			// TODO: Handle error (e.g. show toast)
 		}
 		setNotifications((prev) =>
 			prev.map((n) =>
@@ -64,6 +63,7 @@ export function NotificationProvider({ children }) {
 		</NotificationContext.Provider>
 	);
 }
+
 export function useNotifications() {
 	const context = useContext(NotificationContext);
 	if (!context) {
