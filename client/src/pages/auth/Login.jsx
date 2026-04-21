@@ -58,45 +58,58 @@ export default function Login() {
     }
   }
 
-  async function handleLogin(evt) {
-    evt.preventDefault();
-    setServerError("");
+async function handleLogin(evt) {
+  evt.preventDefault();
+  setServerError("");
 
-    const e = validate();
-    setErrors(e);
-    if (Object.keys(e).length) return;
+  const e = validate();
+  setErrors(e);
+  if (Object.keys(e).length) return;
 
-    setLoading(true);
-    try {
-      const { data } = await axios.post(
-        `${API}/login`,
-        {
-          email: email.trim().toLowerCase(),
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+  setLoading(true);
+  try {
+    // ✅ LOGIN
+    await axios.post(
+      `${API}/login`,
+      {
+        email: email.trim().toLowerCase(),
+        password,
+      },
+      { withCredentials: true }
+    );
 
-      login(data);
-      redirectAfterLogin(data);
-    } catch (err) {
-      const apiError = err.response?.data;
+    //  GET FULL USER (IMPORTANT FIX)
+    const { data } = await axios.get(
+      "http://localhost:8080/api/users/me",
+      { withCredentials: true }
+    );
 
-      if (apiError?.validationErrors) {
-        setErrors((prev) => ({
-          ...prev,
-          email: apiError.validationErrors.email || null,
-          password: apiError.validationErrors.password || null,
-        }));
-      }
+    //  SAVE USER
+    login(data);
 
-      setServerError(apiError?.message || "Invalid email or password.");
-    } finally {
-      setLoading(false);
+    // REDIRECT BASED ON ROLE
+    if (data?.role === "ROLE_ADMIN") {
+      navigate("/admin/userdashboard");
+    } else {
+      navigate("/profile");
     }
+
+  } catch (err) {
+    const apiError = err.response?.data;
+
+    if (apiError?.validationErrors) {
+      setErrors((prev) => ({
+        ...prev,
+        email: apiError.validationErrors.email || null,
+        password: apiError.validationErrors.password || null,
+      }));
+    }
+
+    setServerError(apiError?.message || "Invalid email or password.");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function handleFirebaseSocialLogin(provider, providerName) {
     setServerError("");

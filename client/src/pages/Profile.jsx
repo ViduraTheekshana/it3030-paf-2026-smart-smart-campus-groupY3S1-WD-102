@@ -266,7 +266,10 @@ export default function Profile() {
 
             setPwMode(false);
             setPwForm({ current: "", next: "", confirm: "" });
-            showToast("Password changed successfully");
+            showToast("Password changed successfully,Please login again");
+            setTimeout(() => {
+    navigate("/login");
+}, 1500);
         } catch (err) {
             showToast(err.response?.data?.message || "Failed to change password", "error");
         } finally {

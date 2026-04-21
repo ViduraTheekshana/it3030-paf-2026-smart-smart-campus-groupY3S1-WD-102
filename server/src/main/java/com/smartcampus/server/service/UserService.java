@@ -1,5 +1,6 @@
 package com.smartcampus.server.service;
-
+import java.time.LocalDateTime;
+import com.smartcampus.server.dto.ChangePasswordRequest;
 import com.smartcampus.server.dto.CreateStaffUserRequest;
 import com.smartcampus.server.dto.StaffAccountResponse;
 import com.smartcampus.server.dto.UpdateProfileRequest;
@@ -120,6 +121,39 @@ public class UserService {
                 tempPassword
         );
     }
+
+
+    // =========================
+    // CHANGE PASSWORD
+    // =========================
+
+    public void changePassword(ChangePasswordRequest request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Account is disabled.");
+        }
+
+        if (user.getProvider() != AuthProvider.LOCAL) {
+            throw new RuntimeException("Password change is only available for local accounts.");
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("New password cannot be the same as the current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+    }
+
 
     // =========================
     // TEMP PASSWORD GENERATOR

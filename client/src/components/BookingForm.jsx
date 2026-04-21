@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createBooking } from "../api/BookingApi";
-import { getAllResources } from "../api/ResourceApi";
+import { getAllResources } from "../api/ResourceAPI";
 
 const BookingForm = ({ addBooking, userId }) => {
   const [formData, setFormData] = useState({
