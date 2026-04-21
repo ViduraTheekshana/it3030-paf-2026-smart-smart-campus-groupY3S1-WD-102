@@ -1,7 +1,11 @@
 import { Outlet } from "react-router-dom";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ResourcePage from "./pages/ResourcePage";
+import AddResource from "./pages/AddResource";
+import AdminResources from "./pages/AdminResources";
+import EditResource from "./pages/EditResource";
 import { Header } from "./components/layout/Header";
+import { Sidebar } from "./components/layout/SideBar";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Login } from "./pages/Login";
@@ -25,6 +29,18 @@ function MainLayout() {
 	);
 }
 
+// Admin layout with Sidebar
+function AdminLayout() {
+	return (
+		<div className="flex bg-gray-50 min-h-screen">
+			<Sidebar />
+			<div className="flex-1 lg:ml-0">
+				<Outlet />
+			</div>
+		</div>
+	);
+}
+
 function App() {
 	return (
 		<>
@@ -33,6 +49,14 @@ function App() {
 					<Toaster position="top-right" richColors />
 					<Routes>
 						<Route path="/login" element={<Login />} />
+
+						{/* Resource Management Routes */}
+						<Route path="/resources" element={<AdminLayout />}>
+							<Route index element={<AdminResources />} />
+						</Route>
+						<Route path="/resources/add" element={<AddResource />} />
+						<Route path="/resources/edit/:id" element={<EditResource />} />
+						<Route path="/user" element={<ResourcePage />} />
 
 						<Route
 							path="/incidents"
@@ -74,3 +98,4 @@ function App() {
 }
 
 export default App;
+
