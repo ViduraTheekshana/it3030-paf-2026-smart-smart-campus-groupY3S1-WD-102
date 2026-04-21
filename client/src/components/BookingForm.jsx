@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { createBooking } from "../api/BookingApi";
-import { getResources } from "../api/ResourceApi";
+import { getAllResources } from "../api/ResourceApi";
 
-const BookingForm = ({ addBooking, userId }) => {
+const BookingForm = ({ addBooking }) => {
   const [formData, setFormData] = useState({
     date: "",
     startTime: "",
@@ -10,36 +10,32 @@ const BookingForm = ({ addBooking, userId }) => {
     purpose: "",
     attendees: "",
   });
+
   const [selectedResource, setSelectedResource] = useState("");
   const [resources, setResources] = useState([]);
-
   const [errors, setErrors] = useState({});
 
-  // Get today's date
   const today = new Date().toISOString().split("T")[0];
 
-  // Fetch resources on component mount
+  // Load resources
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await getResources();
+        const response = await getAllResources();
         setResources(response.data);
       } catch (error) {
         console.error("Error fetching resources:", error);
       }
     };
+
     fetchResources();
   }, []);
 
-  // Validation function
+  // Validation
   const validate = (name, value, updatedData) => {
     let error = "";
 
     switch (name) {
-      case "resource":
-        if (!value) error = "Resource is required";
-        break;
-
       case "date":
         if (!value) error = "Date is required";
         else if (value < today) error = "Cannot select past date";
@@ -51,23 +47,17 @@ const BookingForm = ({ addBooking, userId }) => {
 
       case "endTime":
         if (!value) error = "End time is required";
-        else if (
-          updatedData.startTime &&
-          value <= updatedData.startTime
-        ) {
+        else if (updatedData.startTime && value <= updatedData.startTime)
           error = "End time must be after start time";
-        }
         break;
 
       case "purpose":
         if (!value) error = "Purpose is required";
-        else if (value.length < 3)
-          error = "Minimum 3 characters required";
+        else if (value.length < 3) error = "Minimum 3 characters required";
         break;
 
       case "attendees":
-        if (value && value < 1)
-          error = "Must be at least 1 attendee";
+        if (value && value < 1) error = "Must be at least 1 attendee";
         break;
 
       default:
@@ -77,72 +67,59 @@ const BookingForm = ({ addBooking, userId }) => {
     return error;
   };
 
-  // Handle change with instant validation
+  // Handle input
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    const updatedData = {
-      ...formData,
-      [name]: value,
-    };
+    const updated = { ...formData, [name]: value };
+    setFormData(updated);
 
-    setFormData(updatedData);
+    const error = validate(name, value, updated);
 
-    const error = validate(name, value, updatedData);
-
-    setErrors({
-      ...errors,
+    setErrors((prev) => ({
+      ...prev,
       [name]: error,
-    });
-
-    // Special case: revalidate endTime when startTime changes
-    if (name === "startTime" && formData.endTime) {
-      const endError = validate(
-        "endTime",
-        formData.endTime,
-        updatedData
-      );
-
-      setErrors((prev) => ({
-        ...prev,
-        endTime: endError,
-      }));
-    }
+    }));
   };
 
-  // Final submit validation
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     let newErrors = {};
 
-    // Validate resource
+    // validate resource
     if (!selectedResource) {
       newErrors.resource = "Resource is required";
     }
 
-    // Validate other fields
     Object.keys(formData).forEach((key) => {
       const error = validate(key, formData[key], formData);
       if (error) newErrors[key] = error;
     });
 
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length > 0) return;
 
     try {
+      // IMPORTANT: Backend compatible payload
       const payload = {
-        ...formData,
+        date: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        purpose: formData.purpose,
         attendees: Number(formData.attendees),
-        status: "PENDING",
       };
 
-      await createBooking(payload, userId, selectedResource);
-
-      addBooking(payload); // update UI instantly
+      await createBooking(payload, selectedResource);
 
       alert("Booking created successfully!");
 
+      // UI update (optional)
+      if (addBooking) addBooking(payload);
+
+      // reset form
       setFormData({
         date: "",
         startTime: "",
@@ -150,18 +127,15 @@ const BookingForm = ({ addBooking, userId }) => {
         purpose: "",
         attendees: "",
       });
-      setSelectedResource("");
 
+      setSelectedResource("");
       setErrors({});
     } catch (err) {
-      console.log("ERROR FULL:", err);
-      console.log("RESPONSE:", err.response);
-
-      alert(JSON.stringify(err.response?.data || err.message));
+      console.log("ERROR:", err);
+      alert(err.response?.data || err.message);
     }
   };
 
-  // Input style helper
   const inputStyle = (field) =>
     `w-full border rounded-lg p-2 ${
       errors[field] ? "border-red-500" : "border-gray-300"
@@ -169,64 +143,46 @@ const BookingForm = ({ addBooking, userId }) => {
 
   return (
     <div className="bg-white rounded-xl shadow p-6 border">
-      <h2 className="text-lg font-semibold mb-4">
-        Create New Booking
-      </h2>
+      <h2 className="text-lg font-semibold mb-4">Create Booking</h2>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Resource */}
           <div>
-            <label className="block mb-1 font-medium">
-              Resource *
-            </label>
+            <label>Resource *</label>
             <select
               value={selectedResource}
               onChange={(e) => setSelectedResource(e.target.value)}
-              className={`w-full border rounded-lg p-2 ${
-                errors.resource ? "border-red-500" : "border-gray-300"
-              }`}
+              className={inputStyle("resource")}
             >
-              <option value="">Select a resource...</option>
-              {resources.map((resource) => (
-                <option key={resource.resourceID} value={resource.resourceID}>
-                  {resource.name}
+              <option value="">Select resource</option>
+              {resources.map((r) => (
+                <option key={r.resourceID} value={r.resourceID}>
+                  {r.name}
                 </option>
               ))}
             </select>
-            {errors.resource && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.resource}
-              </p>
-            )}
+            {errors.resource && <p className="text-red-500">{errors.resource}</p>}
           </div>
 
           {/* Date */}
           <div>
-            <label className="block mb-1 font-medium">
-              Date *
-            </label>
+            <label>Date *</label>
             <input
               type="date"
               name="date"
-              value={formData.date}
               min={today}
+              value={formData.date}
               onChange={handleChange}
               className={inputStyle("date")}
             />
-            {errors.date && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.date}
-              </p>
-            )}
+            {errors.date && <p className="text-red-500">{errors.date}</p>}
           </div>
 
           {/* Start Time */}
           <div>
-            <label className="block mb-1 font-medium">
-              Start Time *
-            </label>
+            <label>Start Time *</label>
             <input
               type="time"
               name="startTime"
@@ -234,18 +190,12 @@ const BookingForm = ({ addBooking, userId }) => {
               onChange={handleChange}
               className={inputStyle("startTime")}
             />
-            {errors.startTime && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.startTime}
-              </p>
-            )}
+            {errors.startTime && <p className="text-red-500">{errors.startTime}</p>}
           </div>
 
           {/* End Time */}
           <div>
-            <label className="block mb-1 font-medium">
-              End Time *
-            </label>
+            <label>End Time *</label>
             <input
               type="time"
               name="endTime"
@@ -253,67 +203,39 @@ const BookingForm = ({ addBooking, userId }) => {
               onChange={handleChange}
               className={inputStyle("endTime")}
             />
-            {errors.endTime && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.endTime}
-              </p>
-            )}
+            {errors.endTime && <p className="text-red-500">{errors.endTime}</p>}
           </div>
 
           {/* Purpose */}
           <div>
-            <label className="block mb-1 font-medium">
-              Purpose *
-            </label>
+            <label>Purpose *</label>
             <input
               type="text"
               name="purpose"
-              placeholder="e.g., Lab session, Meeting"
               value={formData.purpose}
               onChange={handleChange}
               className={inputStyle("purpose")}
             />
-            {errors.purpose && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.purpose}
-              </p>
-            )}
+            {errors.purpose && <p className="text-red-500">{errors.purpose}</p>}
           </div>
 
           {/* Attendees */}
           <div>
-            <label className="block mb-1 font-medium">
-              Attendees
-            </label>
+            <label>Attendees</label>
             <input
               type="number"
               name="attendees"
-              min="1"
               value={formData.attendees}
               onChange={handleChange}
               className={inputStyle("attendees")}
             />
-            {errors.attendees && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.attendees}
-              </p>
-            )}
+            {errors.attendees && <p className="text-red-500">{errors.attendees}</p>}
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            className="px-4 py-2 border rounded-lg"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
+        <div className="flex justify-end mt-6">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">
             Create Booking
           </button>
         </div>
