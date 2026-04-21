@@ -4,6 +4,7 @@ import {
 	markAsRead as markNotificationRead,
 } from "../services/notifications";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 const NotificationContext = createContext(null);
 
@@ -16,8 +17,8 @@ export function NotificationProvider({ children }) {
 		if (!user) return;
 		try {
 			const data = await getNotifications();
-			setNotifications(data);
-			setUnreadCount(data.filter((n) => !n.read).length);
+			setNotifications(data.notifications || []);
+			setUnreadCount(data.unreadCount || 0);
 		} catch (error) {
 			console.error("Failed to fetch notifications:", error);
 		}
@@ -26,20 +27,20 @@ export function NotificationProvider({ children }) {
 	const markAsRead = async (id) => {
 		try {
 			await markNotificationRead(id);
+			setNotifications((prev) =>
+				prev.map((n) =>
+					n.id === id
+						? {
+								...n,
+								read: true,
+							}
+						: n,
+				),
+			);
+			setUnreadCount((prev) => Math.max(0, prev - 1));
 		} catch (error) {
-			// TODO: Handle error (e.g. show toast)
+			toast.error("Failed to mark notification as read");
 		}
-		setNotifications((prev) =>
-			prev.map((n) =>
-				n.id === id
-					? {
-							...n,
-							read: true,
-						}
-					: n,
-			),
-		);
-		setUnreadCount((prev) => Math.max(0, prev - 1));
 	};
 
 	useEffect(() => {

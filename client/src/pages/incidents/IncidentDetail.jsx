@@ -39,7 +39,11 @@ import { getTechnicians } from "../../services/user";
 export function IncidentDetail() {
 	const { id } = useParams();
 	const navigate = useNavigate();
-	const { user, isAdmin, isTechnician } = useAuth();
+	const { user } = useAuth();
+
+	const role = user?.role;
+	const isAdmin = role === "ROLE_ADMIN";
+	const isTechnician = role === "ROLE_TECHNICIAN" || role === "ROLE_ADMIN";
 
 	const [incident, setIncident] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -76,7 +80,7 @@ export function IncidentDetail() {
 	};
 
 	const loadTechnicians = async () => {
-		if (isAdmin()) {
+		if (isAdmin) {
 			try {
 				const techs = await getTechnicians();
 
@@ -97,11 +101,17 @@ export function IncidentDetail() {
 		fetchIncident();
 		loadTechnicians();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [id, isAdmin]);
+	}, [id, role]);
 
 	const handleStatusUpdate = async () => {
 		try {
-			await updateIncidentStatus(id, statusDialog.status, statusNotes);
+			const isRejection = statusDialog.status === "REJECTED";
+			await updateIncidentStatus(
+				id,
+				statusDialog.status,
+				isRejection ? undefined : statusNotes || undefined,
+				isRejection ? statusNotes : undefined,
+			);
 			toast.success(
 				`Status updated to ${statusDialog.status.replace(/_/g, " ")}`,
 			);
@@ -195,24 +205,24 @@ export function IncidentDetail() {
 		incident.status !== "CLOSED" && incident.status !== "REJECTED";
 
 	const canAssign =
-		isAdmin() &&
+		isAdmin &&
 		(incident.status === "OPEN" || incident.status === "IN_PROGRESS");
 
 	// Start Work: Only if OPEN. Visible to Admins, OR the explicitly assigned technician.
 	// Note: We use incident.assignedToId to match your Spring Boot JSON payload.
 	const canStartWork =
 		incident.status === "OPEN" &&
-		(isAdmin() || (isTechnician() && incident.assignedToId === user?.id));
+		(isAdmin || (isTechnician && incident.assignedToId === user?.id));
 
 	// Resolve: Only if IN_PROGRESS. Visible to Admins, OR the assigned technician.
 	const canMarkResolved =
 		incident.status === "IN_PROGRESS" &&
-		(isAdmin() || (isTechnician() && incident.assignedToId === user?.id));
+		(isAdmin || (isTechnician && incident.assignedToId === user?.id));
 
-	const canClose = isAdmin() && incident.status === "RESOLVED";
+	const canClose = isAdmin && incident.status === "RESOLVED";
 
 	// Reject: Only Admins, and ONLY when the ticket is OPEN (matching your backend constraints)
-	const canReject = isAdmin() && incident.status === "OPEN";
+	const canReject = isAdmin && incident.status === "OPEN";
 
 	return (
 		<div className="max-w-5xl mx-auto space-y-6">
@@ -583,9 +593,9 @@ export function IncidentDetail() {
 											</div>
 										)}
 										{editingComment !== comment.id &&
-											(user?.id === comment.authorId || isAdmin()) && (
+											(user?.id === comment.authorId || isAdmin) && (
 												<div className="mt-1 flex justify-end gap-3">
-													{user?.id === comment.authorId && (
+													{(user?.id === comment.authorId || isAdmin) && (
 														<button
 															onClick={() => {
 																setEditingComment(comment.id);
@@ -596,7 +606,7 @@ export function IncidentDetail() {
 															<PencilIcon className="h-3 w-3" /> Edit
 														</button>
 													)}
-													{(user?.id === comment.authorId || isAdmin()) && (
+													{(user?.id === comment.authorId || isAdmin) && (
 														<button
 															onClick={() =>
 																setDeleteConfirm({

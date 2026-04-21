@@ -1,4 +1,3 @@
-import React from "react";
 import { api } from "./api";
 export const addComment = async (incidentId, content) => {
 	const response = await api.post(`/incidents/${incidentId}/comments`, {

@@ -1,9 +1,8 @@
-import React from "react";
 import { api } from "./api";
 
 export const googleLogin = async (firebaseToken) => {
 	const response = await api.post("/auth/firebase", {
-		token: firebaseToken,
+		idToken: firebaseToken,
 	});
 	return response.data;
 };

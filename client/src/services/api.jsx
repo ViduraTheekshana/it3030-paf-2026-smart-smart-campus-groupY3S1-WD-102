@@ -1,4 +1,3 @@
-import React from "react";
 import axios from "axios";
 
 const axiosConfig = {
@@ -14,7 +13,12 @@ export const api = axios.create({
 	baseURL: `${axiosConfig.baseURL}/api`,
 });
 
-export const authApi = axios.create({
-	...axiosConfig,
-	baseURL: `${axiosConfig.baseURL}/auth`,
-});
+api.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		if (error.response?.status === 401) {
+			window.location.href = "/login";
+		}
+		return Promise.reject(error);
+	},
+);
