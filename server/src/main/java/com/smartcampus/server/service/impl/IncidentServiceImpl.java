@@ -50,7 +50,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketCommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final FileStorageUtil fileStorageUtil; 
+    private final FileStorageUtil fileStorageUtil;
     //Notification Part
     private final ApplicationEventPublisher publisher;
 
@@ -89,16 +89,16 @@ public class IncidentServiceImpl implements IncidentService {
     @Override
     @Transactional(readOnly = true)
     public Page<TicketSummaryResponse> getAllTickets(
-            TicketStatus status, TicketCategory category, TicketPriority priority,
+            TicketStatus status, TicketCategory category, TicketPriority priority, String search,
             Long currentUserId, String currentUserRole, Pageable pageable) {
 
         if (isAdminOrTechnician(currentUserRole)) {
             return ticketRepository
-                    .findAllWithFilters(status, category, priority, pageable)
+                    .findAllWithFilters(status, category, priority, search, pageable)
                     .map(TicketSummaryResponse::from);
         }
         return ticketRepository
-                .findByUserWithFilters(currentUserId, status, category, pageable)
+                .findByUserWithFilters(currentUserId, status, category, search, pageable)
                 .map(TicketSummaryResponse::from);
     }
 
@@ -292,4 +292,3 @@ public void deleteComment(UUID ticketId, UUID commentId,
         }
     }
 }
-

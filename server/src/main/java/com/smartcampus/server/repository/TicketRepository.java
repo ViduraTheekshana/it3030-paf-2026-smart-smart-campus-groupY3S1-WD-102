@@ -22,11 +22,15 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             WHERE (:status IS NULL OR t.status = :status)
             AND (:category IS NULL OR t.category = :category)
             AND (:priority IS NULL OR t.priority = :priority)
+            AND (:search IS NULL
+                 OR LOWER(CAST(t.title AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                 OR LOWER(CAST(t.description AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
     Page<Ticket> findAllWithFilters(
             @Param("status") TicketStatus status,
             @Param("category") TicketCategory category,
             @Param("priority") TicketPriority priority,
+            @Param("search") String search,
             Pageable pageable
     );
 
@@ -36,11 +40,15 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             WHERE t.reportedBy.id = :userId
             AND (:status IS NULL OR t.status = :status)
             AND (:category IS NULL OR t.category = :category)
+            AND (:search IS NULL
+                 OR LOWER(CAST(t.title AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                 OR LOWER(CAST(t.description AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
     Page<Ticket> findByUserWithFilters(
             @Param("userId") Long userId,
             @Param("status") TicketStatus status,
             @Param("category") TicketCategory category,
+            @Param("search") String search,
             Pageable pageable
     );
 }
