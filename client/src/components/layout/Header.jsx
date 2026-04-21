@@ -13,7 +13,7 @@ const pageTitles = {
 };
 
 export function Header() {
-	const { user } = useAuth();
+	const { user, isAdmin, isTechnician } = useAuth();
 	const location = useLocation();
 
 	const getPageTitle = () => {
@@ -24,15 +24,15 @@ export function Header() {
 		return "Campus Hub";
 	};
 
-	const roleLabel = user?.roles?.includes("ADMIN")
+	const roleLabel = isAdmin()
 		? "Admin"
-		: user?.roles?.includes("TECHNICIAN")
+		: isTechnician()
 			? "Technician"
 			: "User";
 
-	const roleBadgeColor = user?.roles?.includes("ADMIN")
+	const roleBadgeColor = isAdmin()
 		? "bg-red-50 text-red-700 border border-red-200"
-		: user?.roles?.includes("TECHNICIAN")
+		: isTechnician()
 			? "bg-blue-50 text-blue-700 border border-blue-200"
 			: "bg-gray-50 text-gray-600 border border-gray-200";
 
@@ -40,21 +40,23 @@ export function Header() {
 		<header className="bg-white border-b border-gray-200 px-6 py-4">
 			<div className="flex items-center justify-between">
 				<div className="lg:hidden w-10" /> {/* Spacer for mobile menu button */}
-				<div className="hidden lg:block" />
+				<div className="hidden lg:block">
+					<h1 className="text-xl font-bold text-gray-900">{getPageTitle()}</h1>
+				</div>
 				<div className="flex items-center gap-4">
 					<NotificationPanel />
 					<div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-						<div className="h-9 w-9 rounded-full bg-brand-600 flex items-center justify-center">
+						<div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center">
 							<span className="text-white font-semibold text-sm">
-								{user?.name?.charAt(0).toUpperCase()}
+								{user?.fullName?.charAt(0)?.toUpperCase()}
 							</span>
 						</div>
 						<div>
 							<p className="text-sm font-medium text-gray-900 leading-tight">
-								{user?.name}
+								{user?.fullName}
 							</p>
 							<span
-								className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${roleBadgeColor}`}
+								className={`inline-flex items-center px-2 py-0.5 mt-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${roleBadgeColor}`}
 							>
 								{roleLabel}
 							</span>
