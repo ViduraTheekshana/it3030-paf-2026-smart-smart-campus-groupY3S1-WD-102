@@ -29,18 +29,6 @@ function MainLayout() {
 	);
 }
 
-// Admin layout with Sidebar
-function AdminLayout() {
-	return (
-		<div className="flex bg-gray-50 min-h-screen">
-			<Sidebar />
-			<div className="flex-1 lg:ml-0">
-				<Outlet />
-			</div>
-		</div>
-	);
-}
-
 function App() {
 	return (
 		<>
@@ -51,12 +39,47 @@ function App() {
 						<Route path="/login" element={<Login />} />
 
 						{/* Resource Management Routes */}
-						<Route path="/resources" element={<AdminLayout />}>
-							<Route index element={<AdminResources />} />
-						</Route>
-						<Route path="/resources/add" element={<AddResource />} />
-						<Route path="/resources/edit/:id" element={<EditResource />} />
-						<Route path="/user" element={<ResourcePage />} />
+						<Route
+							path="/resources"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AdminResources />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/resources/add"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AddResource />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/resources/edit/:id"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<EditResource />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/user"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<ResourcePage />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 
 						<Route
 							path="/incidents"
@@ -98,4 +121,3 @@ function App() {
 }
 
 export default App;
-
