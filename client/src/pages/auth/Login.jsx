@@ -121,7 +121,7 @@ async function handleLogin(evt) {
 
       const { data } = await axios.post(
         `${API}/firebase`,
-        { token: firebaseToken },
+        { idToken: firebaseToken },
         { withCredentials: true }
       );
 
