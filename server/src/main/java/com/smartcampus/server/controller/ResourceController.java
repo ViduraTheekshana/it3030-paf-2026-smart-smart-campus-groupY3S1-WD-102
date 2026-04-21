@@ -83,7 +83,7 @@ public class ResourceController {
         data.put("total", service.countAll());
         data.put("active", service.countByStatus("ACTIVE"));
         data.put("inactive", service.countByStatus("OUT_OF_SERVICE"));
-        data.put("types", service.countByType());
+        data.put("types", service.countDistinctTypes());
         return data;
     }
 
