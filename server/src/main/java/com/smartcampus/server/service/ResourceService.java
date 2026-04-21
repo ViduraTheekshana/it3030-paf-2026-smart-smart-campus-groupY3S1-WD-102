@@ -85,4 +85,11 @@ public class ResourceService {
         return repo.findAll().stream()
                 .collect(Collectors.groupingBy(Resource::getType, Collectors.counting()));
     }
+
+    public long countDistinctTypes() {
+        return repo.findAll().stream()
+                .map(Resource::getType)
+                .distinct()
+                .count();
+    }
 }
