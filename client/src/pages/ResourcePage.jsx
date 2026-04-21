@@ -3,6 +3,8 @@ import { getAllResources, filterResources } from "../api/ResourceAPI";
 import ResourceCard from "../components/ResourceCard";
 import FilterBar from "../components/FilterBar";
 import ResourceModal from "../components/ResourceModal";
+import { Search } from "lucide-react";
+import { Microscope, Building, Home, Package } from "lucide-react";
 
 export default function ResourcePage() {
   const [resources, setResources] = useState([]);
@@ -18,10 +20,21 @@ export default function ResourcePage() {
   const [location, setLocation] = useState("");
   const [capacity, setCapacity] = useState("");
   const [status, setStatus] = useState("");
+  const [availabilityStart, setAvailabilityStart] = useState("");
+  const [availabilityEnd, setAvailabilityEnd] = useState("");
 
   useEffect(() => {
     loadAll();
   }, []);
+
+  useEffect(() => {
+    const filtered = resources.filter(resource => 
+      resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.type.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredResources(filtered);
+  }, [searchTerm, resources]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -69,6 +82,8 @@ export default function ResourcePage() {
     setLocation("");
     setCapacity("");
     setStatus("");
+    setAvailabilityStart("");
+    setAvailabilityEnd("");
     setSearchTerm("");
     setFilteredResources(resources);
     setShowFilters(false);
@@ -136,6 +151,10 @@ export default function ResourcePage() {
             setCapacity={setCapacity}
             status={status}
             setStatus={setStatus}
+            availabilityStart={availabilityStart}
+            setAvailabilityStart={setAvailabilityStart}
+            availabilityEnd={availabilityEnd}
+            setAvailabilityEnd={setAvailabilityEnd}
             applyFilters={applyFilters}
             resetFilters={resetFilters}
             filteredResourcesCount={filteredResources.length}

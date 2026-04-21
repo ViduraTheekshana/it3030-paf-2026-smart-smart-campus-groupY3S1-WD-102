@@ -12,7 +12,9 @@ import {
   Home,
   Microscope,
   Building,
-  Package
+  Package,
+  Calendar,
+  Clock
 } from "lucide-react";
 
 export default function FilterBar({ 
@@ -30,6 +32,10 @@ export default function FilterBar({
   setCapacity,
   status,
   setStatus,
+  availabilityStart,
+  setAvailabilityStart,
+  availabilityEnd,
+  setAvailabilityEnd,
   applyFilters,
   resetFilters,
   filteredResourcesCount
@@ -163,6 +169,35 @@ export default function FilterBar({
                   <option value="active">Active</option>
                   <option value="out of service">Out of Service</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Time Availability Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t border-gray-200">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Clock className="inline w-4 h-4 mr-1" />
+                  Available From
+                </label>
+                <input
+                  type="time"
+                  value={availabilityStart}
+                  onChange={(e) => setAvailabilityStart(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Clock className="inline w-4 h-4 mr-1" />
+                  Available To
+                </label>
+                <input
+                  type="time"
+                  value={availabilityEnd}
+                  onChange={(e) => setAvailabilityEnd(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
               </div>
             </div>
 

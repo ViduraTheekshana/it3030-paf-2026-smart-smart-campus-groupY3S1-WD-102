@@ -9,6 +9,32 @@ import {
 } from "lucide-react";
 
 export default function ResourceCard({ resource, viewMode, onClick }) {
+  const isAvailable = (resource) => {
+    if (!resource.availabilityStart || !resource.availabilityEnd) {
+      return true; // No availability times set, assume available
+    }
+    
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString('en-GB', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    
+    const startTime = resource.availabilityStart;
+    const endTime = resource.availabilityEnd;
+    
+    // Convert time strings to Date objects for comparison
+    const startDate = new Date(`2000-01-01T${startTime}`);
+    const endDate = new Date(`2000-01-01T${endTime}`);
+    const currentDate = new Date(`2000-01-01T${currentTime}`);
+    
+    // Check if current time is within availability range
+    const isTimeInRange = currentDate >= startDate && currentDate <= endDate;
+    
+    return isTimeInRange;
+  };
+
   const getResourceIcon = (type) => {
     switch (type?.toLowerCase()) {
       case 'lab': return <Microscope className="w-5 h-5" />;
@@ -60,6 +86,26 @@ export default function ResourceCard({ resource, viewMode, onClick }) {
                 {resource.status?.replace('_', ' ')}
               </span>
             </div>
+            {/* Availability Status */}
+            <div className="absolute top-2 left-2">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                isAvailable(resource) 
+                  ? 'bg-green-100 text-green-800 border-green-200' 
+                  : 'bg-red-100 text-red-800 border-red-200'
+              }`}>
+                {isAvailable(resource) ? (
+                  <>
+                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    <span className="text-xs">Available</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                    <span className="text-xs">Closed</span>
+                  </>
+                )}
+              </span>
+            </div>
           </div>
           <div className="p-3 sm:p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -101,6 +147,24 @@ export default function ResourceCard({ resource, viewMode, onClick }) {
             <div className="flex items-center gap-3 mb-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(resource.status)}`}>
                 {resource.status?.replace('_', ' ')}
+              </span>
+              {/* Availability Status */}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                isAvailable(resource) 
+                  ? 'bg-green-100 text-green-800 border-green-200' 
+                  : 'bg-red-100 text-red-800 border-red-200'
+              }`}>
+                {isAvailable(resource) ? (
+                  <>
+                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    <span className="text-xs">Available</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                    <span className="text-xs">Closed</span>
+                  </>
+                )}
               </span>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 {getResourceIcon(resource.type)}
