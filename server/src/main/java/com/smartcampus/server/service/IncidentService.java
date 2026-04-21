@@ -23,7 +23,7 @@ public interface IncidentService {
     TicketResponse createTicket(CreateTicketRequest request, Long currentUserId);
 
     Page<TicketSummaryResponse> getAllTickets(
-            TicketStatus status, TicketCategory category, TicketPriority priority,
+            TicketStatus status, TicketCategory category, TicketPriority priority, String search,
             Long currentUserId, String currentUserRole, Pageable pageable);
 
     TicketResponse getTicket(UUID ticketId, Long currentUserId, String currentUserRole);

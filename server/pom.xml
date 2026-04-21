@@ -221,6 +221,17 @@
 					<skipTests>true</skipTests>
 				</configuration>
 			</plugin>
+
+			<plugin>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-maven-plugin</artifactId>
+					<version>11.14.1</version> <dependencies>
+							<dependency>
+									<groupId>org.flywaydb</groupId>
+									<artifactId>flyway-database-postgresql</artifactId>
+									<version>11.14.1</version> </dependency>
+					</dependencies>
+			</plugin>
 		</plugins>
 	</build>
 

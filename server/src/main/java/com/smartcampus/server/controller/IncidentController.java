@@ -70,10 +70,11 @@ public class IncidentController {
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) TicketCategory category,
             @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) String search,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
 
         return ResponseEntity.ok(incidentService.getAllTickets(
-                status, category, priority, currentUserId(), currentUserRole(), pageable));
+                status, category, priority, search, currentUserId(), currentUserRole(), pageable));
     }
 
     @GetMapping("/{id}")
