@@ -9,9 +9,12 @@ import { useNotifications } from "../../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const typeIcons = {
-	BOOKING_UPDATE: CheckCircleIcon,
-	TICKET_UPDATE: AlertCircleIcon,
-	COMMENT: MessageSquareIcon,
+	BOOKING_APPROVED: CheckCircleIcon,
+	BOOKING_REJECTED: CheckCircleIcon,
+	BOOKING_CANCELLED: CheckCircleIcon,
+	TICKET_STATUS_CHANGED: AlertCircleIcon,
+	NEW_COMMENT: MessageSquareIcon,
+	SYSTEM_ALERT: BellIcon,
 };
 
 export function NotificationPanel() {

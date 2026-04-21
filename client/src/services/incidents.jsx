@@ -1,4 +1,3 @@
-import React from "react";
 import { api } from "./api";
 
 export const createIncident = async (data) => {
@@ -17,10 +16,16 @@ export const getIncidentById = async (id) => {
 	return response.data;
 };
 
-export const updateIncidentStatus = async (id, status, notes) => {
+export const updateIncident = async (id, data) => {
+	const response = await api.put(`/incidents/${id}`, data);
+	return response.data;
+};
+
+export const updateIncidentStatus = async (id, status, resolutionNotes, rejectionReason) => {
 	const response = await api.patch(`/incidents/${id}/status`, {
 		status,
-		notes,
+		resolutionNotes,
+		rejectionReason,
 	});
 	return response.data;
 };

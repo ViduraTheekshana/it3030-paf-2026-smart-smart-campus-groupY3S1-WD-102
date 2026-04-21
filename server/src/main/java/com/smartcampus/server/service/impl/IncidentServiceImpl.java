@@ -114,6 +114,34 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
+    public TicketResponse updateTicketDetails(UUID ticketId, CreateTicketRequest request,
+                                              Long currentUserId, String currentUserRole) {
+        Ticket ticket = findTicket(ticketId);
+
+        boolean isAdmin = "ROLE_ADMIN".equals(currentUserRole);
+        boolean isOwner = ticket.getReportedBy().getUserId().equals(currentUserId);
+
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("Only the reporter or an admin can edit ticket details.");
+        }
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setLocation(request.getLocation());
+        ticket.setCategory(request.getCategory());
+        ticket.setPriority(request.getPriority());
+        ticket.setPreferredContact(request.getPreferredContact());
+
+        if (request.getResourceId() != null) {
+            Resource resource = new Resource();
+            resource.setResourceID(request.getResourceId());
+            ticket.setResource(resource);
+        }
+
+        return TicketResponse.from(ticketRepository.save(ticket));
+    }
+
+    @Override
     public TicketResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request,
                                          Long currentUserId, String currentUserRole) {
     Ticket ticket = findTicket(ticketId);

@@ -87,11 +87,8 @@ public class IncidentController {
     public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable UUID id,
             @Valid @RequestBody CreateTicketRequest request) {
-        TicketResponse existing = incidentService.getTicket(id, currentUserId(), currentUserRole());
-        UpdateTicketStatusRequest keepStatus = new UpdateTicketStatusRequest();
-        keepStatus.setStatus(existing.getStatus());
         return ResponseEntity.ok(
-                incidentService.updateTicketStatus(id, keepStatus, currentUserId(), currentUserRole()));
+                incidentService.updateTicketDetails(id, request, currentUserId(), currentUserRole()));
     }
 
     @DeleteMapping("/{id}")
