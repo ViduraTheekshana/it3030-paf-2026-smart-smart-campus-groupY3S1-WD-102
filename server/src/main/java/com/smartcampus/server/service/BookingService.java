@@ -32,8 +32,17 @@ public class BookingService {
     // CREATE BOOKING
     public Booking createBooking(Booking booking, Long resourceID, Authentication authentication) {
 
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated. Please login again.");
+        }
         // Get authenticated user from SecurityContext
-        String email = authentication.getName(); // Get username/email from authentication
+        String email;
+        try {
+            email = authentication.getName();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid authentication token");
+        }
+        
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
