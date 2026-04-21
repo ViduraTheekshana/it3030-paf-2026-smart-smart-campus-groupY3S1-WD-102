@@ -1,6 +1,6 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
 import { getCurrentUser } from "../services/auth";
-// import { logoutUser } from "../services/auth";
+import { api } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -27,15 +27,13 @@ export function AuthProvider({ children }) {
 	};
 
 	const logout = async () => {
-		// To truly log out, you should call a backend endpoint that clears the cookie
-		// try {
-		//   await logoutUser();
-		// } catch (error) {
-		//   console.error("Logout failed", error);
-		// }
-
-		// Clear the local state regardless
-		setUser(null);
+		try {
+			await api.post("/auth/logout");
+		} catch (error) {
+			console.error("Logout API call failed", error);
+		} finally {
+			setUser(null);
+		}
 	};
 
 	const isAdmin = () => user?.role === "ROLE_ADMIN";

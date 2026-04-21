@@ -1,53 +1,32 @@
-import axios from "axios";
-
-const BASE = "http://localhost:8080/resources";
-
-export const getAllResources = () => {
-	return axios.get(BASE);
-};
+import { api } from "../services/api";
 
 // GET ALL
-export const getAll = async () => {
-	return await axios.get(BASE);
-};
+export const getAllResources = () => api.get("/resources");
+export const getAll = getAllResources;
+export const getResources = getAllResources; // alias used by BookingForm
 
 // GET BY ID
-export const getById = async (id) => {
-	return await axios.get(`${BASE}/${id}`);
-};
+export const getById = (id) => api.get(`/resources/${id}`);
 
 // CREATE
-export const create = async (data) => {
-	return await axios.post(BASE, data);
-};
+export const create = (data) => api.post("/resources", data);
 
 // UPDATE
-export const update = async (id, data) => {
-	return await axios.put(`${BASE}/${id}`, data);
-};
+export const update = (id, data) => api.put(`/resources/${id}`, data);
 
 // DELETE
-export const remove = async (id) => {
-	return await axios.delete(`${BASE}/${id}`);
-};
+export const remove = (id) => api.delete(`/resources/${id}`);
 
-// FILTER (VERY IMPORTANT )
-export const filterResources = async (filters) => {
-	return await axios.get(`${BASE}/filter`, {
-		params: filters,
-	});
-};
+// FILTER
+export const filterResources = (filters) =>
+	api.get("/resources/filter", { params: filters });
 
 // DASHBOARD SUMMARY
-export const summary = async () => {
-	return await axios.get(`${BASE}/summary`);
-};
+export const summary = () => api.get("/resources/summary");
+export const getSummary = summary; // alias used by AdminResources
 
 // IMAGE UPLOAD
-export const upload = async (formData) => {
-	return await axios.post(`${BASE}/upload`, formData, {
-		headers: {
-			"Content-Type": "multipart/form-data",
-		},
+export const upload = (formData) =>
+	api.post("/resources/upload", formData, {
+		headers: { "Content-Type": "multipart/form-data" },
 	});
-};

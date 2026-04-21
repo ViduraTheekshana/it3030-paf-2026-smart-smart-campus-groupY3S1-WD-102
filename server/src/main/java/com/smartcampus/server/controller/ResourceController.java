@@ -13,8 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
 
 @RestController
-@CrossOrigin(origins = "*")
-@RequestMapping("/resources")
+@RequestMapping("/api/resources")
 public class ResourceController {
 
     @Autowired

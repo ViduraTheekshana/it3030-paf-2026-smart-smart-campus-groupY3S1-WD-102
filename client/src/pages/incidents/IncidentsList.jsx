@@ -21,10 +21,15 @@ import { toast } from "sonner";
 export function IncidentsList() {
 	const [incidents, setIncidents] = useState([]);
 	const [loading, setLoading] = useState(true);
-	const { user, isAdmin, isTechnician, isUser } = useAuth();
+	const { user } = useAuth();
+
+	const role = user?.role;
+	const isAdmin = role === "ROLE_ADMIN";
+	const isTechnician = role === "ROLE_TECHNICIAN" || role === "ROLE_ADMIN";
+	const isUser = role === "ROLE_USER";
 
 	const [showOnlyAssigned, setShowOnlyAssigned] = useState(
-		isTechnician() && !isAdmin(),
+		isTechnician && !isAdmin,
 	);
 
 	const [filters, setFilters] = useState({
@@ -54,9 +59,9 @@ export function IncidentsList() {
 				// Include pagination params
 				const apiParams = { ...filters, page: currentPage, size: pageSize };
 
-				if (isUser()) {
+				if (isUser) {
 					apiParams.reporterId = user?.id;
-				} else if (isTechnician() && !isAdmin() && showOnlyAssigned) {
+				} else if (isTechnician && !isAdmin && showOnlyAssigned) {
 					apiParams.assignedTo = user?.id;
 				}
 
@@ -92,10 +97,8 @@ export function IncidentsList() {
 	}, [
 		filters,
 		currentPage,
+		role,
 		user?.id,
-		isUser,
-		isTechnician,
-		isAdmin,
 		showOnlyAssigned,
 	]);
 
@@ -105,9 +108,9 @@ export function IncidentsList() {
 			try {
 				const baseParams = { size: 1 }; // Request minimal data just to get totalElements
 
-				if (isUser()) {
+				if (isUser) {
 					baseParams.reporterId = user?.id;
-				} else if (isTechnician() && !isAdmin() && showOnlyAssigned) {
+				} else if (isTechnician && !isAdmin && showOnlyAssigned) {
 					baseParams.assignedTo = user?.id;
 				}
 
@@ -135,7 +138,7 @@ export function IncidentsList() {
 		};
 
 		fetchCounts();
-	}, [user?.id, isUser, isTechnician, isAdmin, showOnlyAssigned]);
+	}, [role, user?.id, showOnlyAssigned]);
 
 	const handleFilterChange = (e) => {
 		const { name, value } = e.target;
@@ -148,12 +151,12 @@ export function IncidentsList() {
 	};
 
 	const getEmptyStateMessage = () => {
-		if (isUser()) {
+		if (isUser) {
 			return {
 				title: "You haven't reported any incidents yet",
 				description: "Click 'Report Incident' to get started.",
 			};
-		} else if (isTechnician() && !isAdmin()) {
+		} else if (isTechnician && !isAdmin) {
 			return {
 				title: showOnlyAssigned
 					? "No tickets assigned to you yet"
@@ -174,24 +177,24 @@ export function IncidentsList() {
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 				<div>
 					<h1 className="text-2xl font-bold text-gray-900">
-						{isUser()
+						{isUser
 							? "My Tickets"
-							: isTechnician() && !isAdmin()
+							: isTechnician && !isAdmin
 								? showOnlyAssigned
 									? "Assigned Tickets"
 									: "All Tickets"
 								: "Incidents & Tickets"}
 					</h1>
 					<p className="text-sm text-gray-500 mt-1">
-						{isUser()
+						{isUser
 							? "Your reported maintenance issues"
-							: isTechnician() && !isAdmin()
+							: isTechnician && !isAdmin
 								? "Track and resolve campus issues"
 								: "Track and manage campus maintenance issues"}
 					</p>
 				</div>
 				<div className="flex gap-2">
-					{isTechnician() && !isAdmin() && (
+					{isTechnician && !isAdmin && (
 						<button
 							onClick={() => {
 								setShowOnlyAssigned(!showOnlyAssigned);
@@ -202,7 +205,7 @@ export function IncidentsList() {
 							{showOnlyAssigned ? "Show All Tickets" : "Show My Tickets"}
 						</button>
 					)}
-					{(isUser() || isAdmin()) && (
+					{(isUser || isAdmin) && (
 						<Link
 							to="/incidents/new"
 							className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
