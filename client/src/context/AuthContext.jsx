@@ -38,15 +38,18 @@ export function AuthProvider({ children }) {
 		setUser(null);
 	};
 
-	const isAdmin = () => user?.roles?.includes("ADMIN");
+	const isAdmin = () => user?.role === "ROLE_ADMIN";
 
 	const isTechnician = () =>
-		user?.roles?.includes("TECHNICIAN") || user?.roles?.includes("ADMIN");
-	const isUser = () => !isAdmin() && !user?.roles?.includes("TECHNICIAN");
+		user?.role === "ROLE_TECHNICIAN" || user?.role === "ROLE_ADMIN";
+
+	const isUser = () =>
+		user?.role === "ROLE_USER" ||
+		(!isAdmin() && user?.role !== "ROLE_TECHNICIAN");
 
 	const getRoleAccent = () => {
 		if (isAdmin()) return "red-600";
-		if (user?.roles?.includes("TECHNICIAN")) return "blue-600";
+		if (user?.role === "ROLE_TECHNICIAN") return "blue-600";
 		return "indigo-600";
 	};
 

@@ -5,6 +5,12 @@ import { Header } from "./components/layout/Header";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Login } from "./pages/Login";
+import { Toaster } from "sonner";
+import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import { Layout } from "./components/layout/Layout";
+import { IncidentsList } from "./pages/incidents/IncidentsList";
+import { CreateIncident } from "./pages/incidents/CreateIncident";
+import { IncidentDetail } from "./pages/incidents/IncidentDetail";
 
 // A simple layout component that includes the Header
 function MainLayout() {
@@ -21,22 +27,49 @@ function MainLayout() {
 
 function App() {
 	return (
-		<Router>
+		<>
 			<AuthProvider>
 				<NotificationProvider>
+					<Toaster position="top-right" richColors />
 					<Routes>
-						{/* Login gets its own route with NO header */}
 						<Route path="/login" element={<Login />} />
 
-						{/* Everything inside this Layout route WILL have the header */}
-						{/* <Route element={<MainLayout />}>
-							<Route path="/resources" element={<ResourcePage />} />
-							<Route path="/dashboard" element={<div>Dashboard</div>} />
-						</Route> */}
+						<Route
+							path="/incidents"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<IncidentsList />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/incidents/new"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<CreateIncident />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/incidents/:id"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<IncidentDetail />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 					</Routes>
 				</NotificationProvider>
 			</AuthProvider>
-		</Router>
+		</>
 	);
 }
 

@@ -2,7 +2,6 @@ import React from "react";
 import { api } from "./api";
 export const getNotifications = async () => {
 	const response = await api.get("/notifications");
-	console.log("Fetched notifications:", response.data);
 	return response.data;
 };
 export const markAsRead = async (id) => {
