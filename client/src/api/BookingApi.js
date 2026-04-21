@@ -20,3 +20,4 @@ export const rejectBooking = (id, reason) =>
   axios.put(`${BASE_URL}/${id}/reject`, null, {
     params: { rejectReason: reason }
   });
+  

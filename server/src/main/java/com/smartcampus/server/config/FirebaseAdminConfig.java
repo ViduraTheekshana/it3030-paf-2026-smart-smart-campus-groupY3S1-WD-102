@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Component
-public class FirebaseAdminConfig {
+public class FirebaseAdminConfig {  
 
     @Value("${app.firebase.project-id}")
     private String projectId;

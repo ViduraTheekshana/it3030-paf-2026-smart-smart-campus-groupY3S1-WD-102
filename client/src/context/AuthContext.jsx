@@ -3,65 +3,125 @@ import { getCurrentUser } from "../services/auth";
 import { api } from "../services/api";
 
 const AuthContext = createContext(null);
+const API = "http://localhost:8080";
+
+// Normalize backend user shape
+function normalizeUser(userData) {
+	if (!userData) return null;
+
+	return {
+		...userData,
+		id: userData.id || userData.userId || "",
+		userId: userData.userId || userData.id || "",
+		fullName: userData.fullName || userData.name || "",
+		name: userData.name || userData.fullName || "",
+		email: userData.email || "",
+		role: userData.role || "ROLE_USER",
+		provider: userData.provider || "LOCAL",
+		profilePictureUrl:
+			userData.profilePictureUrl || userData.profilePhotoUrl || "",
+	};
+}
 
 export function AuthProvider({ children }) {
-	const [user, setUser] = useState(null);
+	const [currentUser, setCurrentUser] = useState(null);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		getCurrentUser()
-			.then((userData) => {
-				setUser(userData);
-			})
-			.catch((error) => {
-				console.error("Not authenticated:", error);
-				setUser(null);
-			})
-			.finally(() => {
-				setLoading(false);
-			});
-	}, []);
+	// Always allow cookies
+	axios.defaults.withCredentials = true;
 
+	// Restore session using backend cookie
+	useEffect(() => {
+		const restoreSession = async () => {
+			try {
+				const { data } = await axios.get(`${API}/api/users/me`, {
+					withCredentials: true,
+				});
+
+				setCurrentUser(normalizeUser(data));
+			} catch (err) {
+				if (err.response?.status !== 401 && err.response?.status !== 403) {
+					console.error("Session restore failed:", err);
+				}
+				setCurrentUser(null);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		restoreSession();
+	}, []);
+	// Called after normal login, register, firebase login, or callback completion
 	const login = (userData) => {
-		setUser(userData);
+		const normalized = normalizeUser(userData?.user || userData);
+		setCurrentUser(normalized);
 	};
 
 	const logout = async () => {
 		try {
-			await api.post("/auth/logout");
-		} catch (error) {
-			console.error("Logout API call failed", error);
+			await axios.post(`${API}/api/auth/logout`, {}, { withCredentials: true });
+		} catch {
+			// ignore logout error
 		} finally {
-			setUser(null);
+			clearAuth();
 		}
 	};
 
-	const isAdmin = () => user?.role === "ROLE_ADMIN";
-
-	const isTechnician = () =>
-		user?.role === "ROLE_TECHNICIAN" || user?.role === "ROLE_ADMIN";
-
-	const isUser = () =>
-		user?.role === "ROLE_USER" ||
-		(!isAdmin() && user?.role !== "ROLE_TECHNICIAN");
-
-	const getRoleAccent = () => {
-		if (isAdmin()) return "red-600";
-		if (user?.role === "ROLE_TECHNICIAN") return "blue-600";
-		return "indigo-600";
+	const clearAuth = () => {
+		setCurrentUser(null);
 	};
+
+	// Cookie-based backend usually does not need Authorization header
+	const getAuthHeader = () => ({});
+
+	if (loading) {
+		return (
+			<div
+				style={{
+					minHeight: "100vh",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+					color: "#64748b",
+					fontSize: 14,
+					background: "#f8fafc",
+				}}
+			>
+				<div
+					style={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: 12,
+					}}
+				>
+					<div
+						style={{
+							width: 36,
+							height: 36,
+							borderRadius: "50%",
+							border: "3px solid #e2e8f0",
+							borderTopColor: "#3b82f6",
+							animation: "sc_spin 0.8s linear infinite",
+						}}
+					/>
+					<span>Loading...</span>
+					<style>{`@keyframes sc_spin { to { transform: rotate(360deg); } }`}</style>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<AuthContext.Provider
 			value={{
-				user,
-				loading,
+				currentUser,
 				login,
 				logout,
-				isAdmin,
-				isTechnician,
-				isUser,
-				getRoleAccent,
+				loading,
+				getAuthHeader,
+				clearAuth,
 			}}
 		>
 			{children}
@@ -70,9 +130,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-	const context = useContext(AuthContext);
-	if (!context) {
-		throw new Error("useAuth must be used within AuthProvider");
-	}
-	return context;
+	return useContext(AuthContext);
 }

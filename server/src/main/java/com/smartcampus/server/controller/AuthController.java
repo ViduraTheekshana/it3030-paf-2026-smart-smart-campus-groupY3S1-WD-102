@@ -137,11 +137,4 @@ public ResponseEntity<?> logout() {
         return ResponseEntity.ok(Map.of("message", "Password reset successful."));
     }
 
-    @GetMapping("/oauth2/urls")
-    public ResponseEntity<Object> getOauth2Urls() {
-        return ResponseEntity.ok(Map.of(
-                "google", "/oauth2/authorization/google",
-                "facebook", "/oauth2/authorization/facebook"
-        ));
-    }
 }
