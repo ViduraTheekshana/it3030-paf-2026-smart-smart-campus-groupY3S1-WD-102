@@ -72,7 +72,10 @@ public class NotificationService {
         Notification notification = getOwnedNotification(notificationId, userId);
         notificationRepository.delete(notification);
     }
-
+    @Transactional
+public long getUnreadCount(Long userId) {
+    return notificationRepository.countByUserUserIdAndReadFalse(userId);
+}
     @Transactional
     public NotificationDTO notifyBookingApproved(User user, Long bookingId, String resourceName) {
         return createAutomatic(

@@ -244,18 +244,18 @@ export default function UserDashboard() {
         }
     }
 
-    async function fetchStats() {
-        setStatsLoading(true);
-        try {
-            const { data } = await api.get("/api/users/stats");
-            setStats(data);
-        } catch {
-            setStats(null);
-        } finally {
-            setStatsLoading(false);
-        }
+   async function fetchStats() {
+    setStatsLoading(true);
+    try {
+        const { data } = await api.get("/api/users/stats");
+        setStats(data || {});
+    } catch (err) {
+        console.error("Stats error:", err);
+        setStats({});
+    } finally {
+        setStatsLoading(false);
     }
-
+}
     async function fetchAdminUnread() {
         if (!adminId) return;
         try {

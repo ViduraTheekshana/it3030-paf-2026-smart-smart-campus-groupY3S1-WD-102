@@ -4,7 +4,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./ProtectedRoute";
 
 import { Header } from "./components/layout/Header";
-import Login from "./pages/auth/Login";
+import Login from "./pages/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Profile from "./pages/Profile";

@@ -46,4 +46,15 @@ public class NotificationController {
         notificationService.delete(notificationId, user.getUserId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+@GetMapping("/user/{userId}/unread-count")
+public ResponseEntity<?> getUnreadCount(@PathVariable Long userId, Authentication authentication) {
+    User user = userService.getEntityByEmail(authentication.getName());
+
+    if (!user.getUserId().equals(userId)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    long count = notificationService.getUnreadCount(userId);
+    return ResponseEntity.ok(java.util.Map.of("count", count));
+}
 }

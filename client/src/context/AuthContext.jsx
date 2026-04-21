@@ -5,7 +5,6 @@ import { api } from "../services/api";
 const AuthContext = createContext(null);
 const API = "http://localhost:8080";
 
-// Normalize backend user shape
 function normalizeUser(userData) {
 	if (!userData) return null;
 
