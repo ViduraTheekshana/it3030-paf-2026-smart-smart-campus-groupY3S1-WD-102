@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAll, remove, getSummary } from "../api/ResourceAPI";
 import ResourceModal from "../components/AdminResourceModal";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 import { 
   Search, 
   Plus, 
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 export default function AdminResources() {
+  const { user, isAdmin } = useAuth();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -87,9 +89,8 @@ export default function AdminResources() {
 
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
-
-      <div className="ml-64 flex-1 p-8">
+    <div className="flex-1 bg-gray-50 min-h-screen">
+      <div className="p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div 
@@ -104,7 +105,7 @@ export default function AdminResources() {
                   <p className="text-gray-600">Manage and monitor all campus resources</p>
                 </div>
                 <button
-                  onClick={() => window.location.href = "/add"}
+                  onClick={() => window.location.href = "/resources/add"}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
                 >
                   <Plus className="w-5 h-5" />
@@ -288,7 +289,7 @@ export default function AdminResources() {
                             View
                           </button>
                           <button
-                            onClick={() => window.location.href = `/edit/${resource.resourceID}`}
+                            onClick={() => window.location.href = `/resources/edit/${resource.resourceID}`}
                             className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <Edit className="w-4 h-4" />
@@ -334,7 +335,7 @@ export default function AdminResources() {
                                 <Eye className="w-4 h-4" />
                               </button>
                             <button
-                                onClick={() => window.location.href = `/edit/${resource.resourceID}`}
+                                onClick={() => window.location.href = `/resources/edit/${resource.resourceID}`}
                                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                               >
                                 <Edit className="w-4 h-4" />

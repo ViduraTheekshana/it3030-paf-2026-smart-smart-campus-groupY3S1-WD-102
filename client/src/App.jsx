@@ -1,7 +1,11 @@
 import { Outlet } from "react-router-dom";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ResourcePage from "./pages/ResourcePage";
+import AddResource from "./pages/AddResource";
+import AdminResources from "./pages/AdminResources";
+import EditResource from "./pages/EditResource";
 import { Header } from "./components/layout/Header";
+import { Sidebar } from "./components/layout/SideBar";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Login } from "./pages/Login";
@@ -35,6 +39,49 @@ function App() {
 					<Toaster position="top-right" richColors />
 					<Routes>
 						<Route path="/login" element={<Login />} />
+
+						{/* Resource Management Routes */}
+						<Route
+							path="/resources"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AdminResources />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/resources/add"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AddResource />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/resources/edit/:id"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<EditResource />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/user"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<ResourcePage />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 
 						<Route
 							path="/incidents"

@@ -12,7 +12,7 @@ export default function EditResource() {
   }, [id]);
 
   const submit = (form) => {
-    update(id, form).then(() => window.location.href = "/admin");
+    update(id, form).then(() => window.location.href = "/resources");
   };
 
   return <ResourceForm onSubmit={submit} initialData={data} />;
