@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { createBooking } from "../api/BookingApi";
-import { getResources } from "../api/ResourceApi";
+import { getAllResources } from "../api/ResourceAPI";
 
 const BookingForm = ({ addBooking, userId }) => {
+  const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
     date: "",
     startTime: "",
@@ -22,7 +23,7 @@ const BookingForm = ({ addBooking, userId }) => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await getResources();
+        const response = await getAllResources(token);
         setResources(response.data);
       } catch (error) {
         console.error("Error fetching resources:", error);
@@ -137,7 +138,7 @@ const BookingForm = ({ addBooking, userId }) => {
         status: "PENDING",
       };
 
-      await createBooking(payload, userId, selectedResource);
+      await createBooking(payload, selectedResource, token);
 
       addBooking(payload); // update UI instantly
 

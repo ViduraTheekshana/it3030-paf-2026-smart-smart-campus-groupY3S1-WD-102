@@ -2,21 +2,47 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:8080/api/bookings";
 
-export const createBooking = (data, userId, resourceID) =>
+// GET ALL (FIXED)
+
+export const getAllBookings = (token) =>
+  axios.get(BASE_URL, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  }); 
+
+ 
+
+// CREATE
+export const createBooking = (data, resourceID, token) =>
   axios.post(BASE_URL, data, {
-    params: { userId, resourceID }
+    params: { resourceID },
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
 
-export const getBookings = () =>
-  axios.get(BASE_URL);
+// DELETE
+export const deleteBooking = (id, token) =>
+  axios.delete(`${BASE_URL}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 
-export const deleteBooking = (id) =>
-  axios.delete(`${BASE_URL}/${id}`);
+// APPROVE
+export const approveBooking = (id, token) =>
+  axios.put(`${BASE_URL}/${id}/approve`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 
-export const approveBooking = (id) =>
-  axios.put(`${BASE_URL}/${id}/approve`);
-
-export const rejectBooking = (id, reason) =>
+// REJECT
+export const rejectBooking = (id, reason, token) =>
   axios.put(`${BASE_URL}/${id}/reject`, null, {
-    params: { rejectReason: reason }
+    params: { rejectReason: reason },
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
