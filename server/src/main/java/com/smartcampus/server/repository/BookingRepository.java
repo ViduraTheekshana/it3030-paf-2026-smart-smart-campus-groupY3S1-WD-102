@@ -15,10 +15,17 @@ import com.smartcampus.server.model.Resource;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.user LEFT JOIN FETCH b.resource")
+    List<Booking> findAllWithUserAndResource();
+
+    @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.user LEFT JOIN FETCH b.resource WHERE b.bookingId = :id")
+    Booking findBookingByIdWithUserAndResource(Long id);
+
     @Query("""
         SELECT b FROM Booking b
         WHERE b.resource = :resource
         AND b.date = :date
+        AND b.status NOT IN ('CANCELLED', 'REJECTED')
         AND (
             (b.startTime < :endTime AND b.endTime > :startTime)
         )

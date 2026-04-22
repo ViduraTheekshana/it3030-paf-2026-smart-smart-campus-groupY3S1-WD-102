@@ -84,13 +84,12 @@ public class BookingService {
 
     // READ ALL
     public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
+        return bookingRepository.findAllWithUserAndResource();
     }
 
     // READ BY ID
     public Booking getBooking(Long id) {
-        return bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        return bookingRepository.findBookingByIdWithUserAndResource(id);
     }
 
     // UPDATE

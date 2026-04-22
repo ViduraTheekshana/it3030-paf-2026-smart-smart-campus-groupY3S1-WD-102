@@ -27,6 +27,14 @@ export const rejectBooking = (id, reason) =>
   axios.put(`${BASE_URL}/${id}/reject`, null, {
     params: { rejectReason: reason },
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+
+// UPDATE
+export const updateBooking = (id, data) =>
+  axios.put(`${BASE_URL}/${id}`, data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     }
   });

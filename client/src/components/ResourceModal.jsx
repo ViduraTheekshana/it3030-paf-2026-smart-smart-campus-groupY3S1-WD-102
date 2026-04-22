@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { 
   X, 
   MapPin, 
@@ -16,6 +17,8 @@ import {
 
 export default function ResourceModal({ resource, onClose }) {
   if (!resource) return null;
+
+  const navigate = useNavigate();
 
   const getResourceIcon = (type) => {
     switch (type?.toLowerCase()) {
@@ -181,7 +184,10 @@ export default function ResourceModal({ resource, onClose }) {
               </button>
             ) : (
               <>
-                <button className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => navigate(`/book/${resource.resourceID}`)}
+                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
                   <Calendar className="w-4 h-4" />
                   Book Resource
                 </button>

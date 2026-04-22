@@ -17,6 +17,8 @@ import { CreateIncident } from "./pages/incidents/CreateIncident";
 import { IncidentDetail } from "./pages/incidents/IncidentDetail";
 import AdminBookingManagement from "./pages/AdminBookingManagement";
 import BookingPage from "./pages/BookingPage";
+import BookingForm from "./components/BookingForm";
+import UpdateBookingForm from "./components/UpdateBookingForm";
 import { Landing } from "./pages/Landing";
 
 // A simple layout component that includes the Header
@@ -117,16 +119,38 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+{/* Booking Management Routes */}
+						<Route
+							path="/bookings"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AdminBookingManagement />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 
 						<Route
-  							path="/bookings"
-  							element={
-    						<ProtectedRoute>
-      							<Layout>
-        							<AdminBookingManagement />
-      							</Layout>
-    						</ProtectedRoute>
-  							}
+							path="/book/:id"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<BookingForm />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/update-booking"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<UpdateBookingForm />
+									</Layout>
+								</ProtectedRoute>
+							}
 						/>
 					</Routes>
 				</NotificationProvider>
