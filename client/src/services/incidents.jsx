@@ -21,6 +21,11 @@ export const updateIncident = async (id, data) => {
 	return response.data;
 };
 
+export const deleteIncident = async (id) => {
+	const response = await api.delete(`/incidents/${id}`);
+	return response.data;
+};
+
 export const updateIncidentStatus = async (id, status, resolutionNotes, rejectionReason) => {
 	const response = await api.patch(`/incidents/${id}/status`, {
 		status,

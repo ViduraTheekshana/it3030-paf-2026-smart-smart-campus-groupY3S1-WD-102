@@ -5,6 +5,7 @@ import {
 	updateIncident,
 	updateIncidentStatus,
 	assignIncident,
+	deleteIncident,
 } from "../../services/incidents";
 import {
 	addComment,
@@ -24,7 +25,6 @@ import {
 	MessageSquareIcon,
 	TrashIcon,
 	PencilIcon,
-	AlertTriangleIcon,
 	PhoneIcon,
 	TagIcon,
 	WrenchIcon,
@@ -42,9 +42,10 @@ export function IncidentDetail() {
 	const navigate = useNavigate();
 	const { user } = useAuth();
 
+	const currentUserId = user?.userId || user?.id;
 	const role = user?.role;
 	const isAdmin = role === "ROLE_ADMIN";
-	const isTechnician = role === "ROLE_TECHNICIAN" || role === "ROLE_ADMIN";
+	const isTechnician = role === "ROLE_TECHNICIAN";
 
 	const [incident, setIncident] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -57,6 +58,9 @@ export function IncidentDetail() {
 		isOpen: false,
 		commentId: null,
 	});
+
+	const [deleteTicketConfirm, setDeleteTicketConfirm] = useState(false);
+	const [deletingTicket, setDeletingTicket] = useState(false);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({});
@@ -88,13 +92,11 @@ export function IncidentDetail() {
 		if (isAdmin) {
 			try {
 				const techs = await getTechnicians();
-
 				const formattedTechs = techs.map((t) => ({
 					id: t.id || t.userId,
 					name: t.fullName,
 					role: "Technician",
 				}));
-
 				setTechnicians(formattedTechs);
 			} catch (error) {
 				toast.error("Failed to load technicians for assignment");
@@ -107,6 +109,22 @@ export function IncidentDetail() {
 		loadTechnicians();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id, role]);
+
+	const handleDeleteTicket = async () => {
+		setDeletingTicket(true);
+		try {
+			await deleteIncident(id);
+			toast.success("Ticket deleted successfully");
+			navigate("/incidents");
+		} catch (error) {
+			const message =
+				error.response?.data?.message || "Failed to delete ticket";
+			toast.error(message);
+		} finally {
+			setDeletingTicket(false);
+			setDeleteTicketConfirm(false);
+		}
+	};
 
 	const startEditing = () => {
 		setEditForm({
@@ -121,7 +139,11 @@ export function IncidentDetail() {
 	};
 
 	const handleSaveEdit = async () => {
-		if (!editForm.title?.trim() || !editForm.description?.trim() || !editForm.location?.trim()) {
+		if (
+			!editForm.title?.trim() ||
+			!editForm.description?.trim() ||
+			!editForm.location?.trim()
+		) {
 			toast.error("Title, description and location are required.");
 			return;
 		}
@@ -150,7 +172,7 @@ export function IncidentDetail() {
 			toast.success(
 				`Status updated to ${statusDialog.status.replace(/_/g, " ")}`,
 			);
-			fetchIncident(); // Refresh to get updated data from backend
+			fetchIncident();
 		} catch (error) {
 			toast.error("Failed to update status");
 		} finally {
@@ -164,7 +186,7 @@ export function IncidentDetail() {
 			await assignIncident(id, techId);
 			toast.success("Ticket successfully assigned");
 			setAssignDropdown(false);
-			fetchIncident(); // Refresh to show new assignee AND the backend's auto-status change
+			fetchIncident();
 		} catch (error) {
 			toast.error("Failed to assign incident");
 			setAssignDropdown(false);
@@ -236,30 +258,26 @@ export function IncidentDetail() {
 	if (!incident) return null;
 
 	// --- PERMISSION LOGIC ---
-	const canEdit =
-		isAdmin || user?.id === incident.reportedById;
-
+	const isOwner = currentUserId === incident.reportedById;
+	const canEdit = isAdmin || isOwner;
+	const canDelete =
+		isAdmin &&
+		(incident.status === "OPEN" || incident.status === "REJECTED");
 	const canChangeStatus =
 		incident.status !== "CLOSED" && incident.status !== "REJECTED";
-
 	const canAssign =
 		isAdmin &&
 		(incident.status === "OPEN" || incident.status === "IN_PROGRESS");
 
-	// Start Work: Only if OPEN. Visible to Admins, OR the explicitly assigned technician.
-	// Note: We use incident.assignedToId to match your Spring Boot JSON payload.
 	const canStartWork =
 		incident.status === "OPEN" &&
-		(isAdmin || (isTechnician && incident.assignedToId === user?.id));
+		(isAdmin || (isTechnician && incident.assignedToId === currentUserId));
 
-	// Resolve: Only if IN_PROGRESS. Visible to Admins, OR the assigned technician.
 	const canMarkResolved =
 		incident.status === "IN_PROGRESS" &&
-		(isAdmin || (isTechnician && incident.assignedToId === user?.id));
+		(isAdmin || (isTechnician && incident.assignedToId === currentUserId));
 
 	const canClose = isAdmin && incident.status === "RESOLVED";
-
-	// Reject: Only Admins, and ONLY when the ticket is OPEN (matching your backend constraints)
 	const canReject = isAdmin && incident.status === "OPEN";
 
 	return (
@@ -304,6 +322,16 @@ export function IncidentDetail() {
 									Edit
 								</button>
 							)}
+							{/* Delete button — admin, OPEN or REJECTED only */}
+							{canDelete && (
+								<button
+									onClick={() => setDeleteTicketConfirm(true)}
+									className="px-4 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200 flex items-center gap-2"
+								>
+									<TrashIcon className="h-4 w-4" />
+									Delete
+								</button>
+							)}
 							{/* Assign button - ADMIN only */}
 							{canAssign && (
 								<div className="relative">
@@ -318,9 +346,6 @@ export function IncidentDetail() {
 										<div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1 max-h-60 overflow-y-auto">
 											{technicians.map((tech) => {
 												const techId = tech.id;
-												const displayName = tech.name;
-												const roleDisplay = tech.role;
-
 												return (
 													<button
 														key={techId}
@@ -328,10 +353,10 @@ export function IncidentDetail() {
 														className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex flex-col gap-0.5 ${incident.assignedToId === techId ? "bg-blue-50 text-blue-700 border-l-2 border-blue-600" : "text-gray-700 border-l-2 border-transparent"}`}
 													>
 														<span className="font-medium capitalize text-gray-900">
-															{displayName}
+															{tech.name}
 														</span>
 														<span className="text-xs text-gray-400">
-															{tech.email} • {roleDisplay}
+															{tech.role}
 														</span>
 													</button>
 												);
@@ -347,10 +372,7 @@ export function IncidentDetail() {
 									{canStartWork && (
 										<button
 											onClick={() =>
-												setStatusDialog({
-													isOpen: true,
-													status: "IN_PROGRESS",
-												})
+												setStatusDialog({ isOpen: true, status: "IN_PROGRESS" })
 											}
 											className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
 										>
@@ -360,10 +382,7 @@ export function IncidentDetail() {
 									{canMarkResolved && (
 										<button
 											onClick={() =>
-												setStatusDialog({
-													isOpen: true,
-													status: "RESOLVED",
-												})
+												setStatusDialog({ isOpen: true, status: "RESOLVED" })
 											}
 											className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
 										>
@@ -373,10 +392,7 @@ export function IncidentDetail() {
 									{canClose && (
 										<button
 											onClick={() =>
-												setStatusDialog({
-													isOpen: true,
-													status: "CLOSED",
-												})
+												setStatusDialog({ isOpen: true, status: "CLOSED" })
 											}
 											className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
 										>
@@ -386,10 +402,7 @@ export function IncidentDetail() {
 									{canReject && (
 										<button
 											onClick={() =>
-												setStatusDialog({
-													isOpen: true,
-													status: "REJECTED",
-												})
+												setStatusDialog({ isOpen: true, status: "REJECTED" })
 											}
 											className="px-4 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200"
 										>
@@ -408,38 +421,57 @@ export function IncidentDetail() {
 						{isEditing ? (
 							<div className="space-y-4">
 								<div>
-									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Title</label>
+									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+										Title
+									</label>
 									<input
 										type="text"
 										value={editForm.title}
-										onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+										onChange={(e) =>
+											setEditForm((p) => ({ ...p, title: e.target.value }))
+										}
 										className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 									/>
 								</div>
 								<div>
-									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</label>
+									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+										Description
+									</label>
 									<textarea
 										value={editForm.description}
-										onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+										onChange={(e) =>
+											setEditForm((p) => ({
+												...p,
+												description: e.target.value,
+											}))
+										}
 										rows={4}
 										className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
 									/>
 								</div>
 								<div>
-									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Location</label>
+									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+										Location
+									</label>
 									<input
 										type="text"
 										value={editForm.location}
-										onChange={(e) => setEditForm((p) => ({ ...p, location: e.target.value }))}
+										onChange={(e) =>
+											setEditForm((p) => ({ ...p, location: e.target.value }))
+										}
 										className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 									/>
 								</div>
 								<div className="grid grid-cols-2 gap-4">
 									<div>
-										<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Category</label>
+										<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+											Category
+										</label>
 										<select
 											value={editForm.category}
-											onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))}
+											onChange={(e) =>
+												setEditForm((p) => ({ ...p, category: e.target.value }))
+											}
 											className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
 										>
 											<option value="ELECTRICAL">Electrical</option>
@@ -451,10 +483,14 @@ export function IncidentDetail() {
 										</select>
 									</div>
 									<div>
-										<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Priority</label>
+										<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+											Priority
+										</label>
 										<select
 											value={editForm.priority}
-											onChange={(e) => setEditForm((p) => ({ ...p, priority: e.target.value }))}
+											onChange={(e) =>
+												setEditForm((p) => ({ ...p, priority: e.target.value }))
+											}
 											className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
 										>
 											<option value="LOW">Low</option>
@@ -465,11 +501,18 @@ export function IncidentDetail() {
 									</div>
 								</div>
 								<div>
-									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Preferred Contact</label>
+									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+										Preferred Contact
+									</label>
 									<input
 										type="text"
 										value={editForm.preferredContact}
-										onChange={(e) => setEditForm((p) => ({ ...p, preferredContact: e.target.value }))}
+										onChange={(e) =>
+											setEditForm((p) => ({
+												...p,
+												preferredContact: e.target.value,
+											}))
+										}
 										className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 										placeholder="Optional"
 									/>
@@ -523,23 +566,24 @@ export function IncidentDetail() {
 								</div>
 							)}
 
-							{/* Upload more */}
-							{(incident.attachments?.length || 0) + files.length < 3 && (
-								<div className="mt-3">
-									<label className="inline-flex items-center gap-2 px-3 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
-										<UploadIcon className="h-4 w-4" />
-										Add Image
-										<input
-											type="file"
-											className="sr-only"
-											accept="image/jpeg,image/png,image/webp"
-											onChange={handleFileChange}
-										/>
-									</label>
-								</div>
-							)}
+							{/* Upload more - ONLY visible to the reporter (isOwner) */}
+							{isOwner &&
+								(incident.attachments?.length || 0) + files.length < 3 && (
+									<div className="mt-3">
+										<label className="inline-flex items-center gap-2 px-3 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
+											<UploadIcon className="h-4 w-4" />
+											Add Image
+											<input
+												type="file"
+												className="sr-only"
+												accept="image/jpeg,image/png,image/webp"
+												onChange={handleFileChange}
+											/>
+										</label>
+									</div>
+								)}
 
-							{files.length > 0 && (
+							{isOwner && files.length > 0 && (
 								<div className="mt-3 grid grid-cols-3 gap-3">
 									{files.map((file, index) => (
 										<div
@@ -678,87 +722,93 @@ export function IncidentDetail() {
 						</p>
 					) : (
 						<div className="space-y-5">
-							{incident.comments.map((comment) => (
-								<div key={comment.id} className="flex gap-3">
-									<div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-										<span className="text-blue-700 font-semibold text-sm">
-											{comment.authorName.charAt(0).toUpperCase()}
-										</span>
-									</div>
-									<div className="flex-1">
-										{editingComment === comment.id ? (
-											<div className="space-y-2">
-												<textarea
-													value={editCommentText}
-													onChange={(e) => setEditCommentText(e.target.value)}
-													className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-													rows="3"
-												/>
-												<div className="flex gap-2">
-													<button
-														onClick={() => handleEditComment(comment.id)}
-														className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-													>
-														Save
-													</button>
-													<button
-														onClick={() => {
-															setEditingComment(null);
-															setEditCommentText("");
-														}}
-														className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
-													>
-														Cancel
-													</button>
-												</div>
-											</div>
-										) : (
-											<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-												<div className="flex justify-between items-start mb-1">
-													<span className="text-sm font-semibold text-gray-900">
-														{comment.authorName}
-													</span>
-													<span className="text-xs text-gray-400">
-														{new Date(comment.createdAt).toLocaleString()}
-													</span>
-												</div>
-												<p className="text-sm text-gray-700 whitespace-pre-wrap">
-													{comment.content}
-												</p>
-											</div>
-										)}
-										{editingComment !== comment.id &&
-											(user?.id === comment.authorId || isAdmin) && (
-												<div className="mt-1 flex justify-end gap-3">
-													{(user?.id === comment.authorId || isAdmin) && (
+							{incident.comments.map((comment) => {
+								const isCommentAuthor = currentUserId === comment.authorId;
+								const canDeleteComment = isCommentAuthor || isAdmin;
+
+								return (
+									<div key={comment.id} className="flex gap-3">
+										<div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+											<span className="text-blue-700 font-semibold text-sm">
+												{comment.authorName.charAt(0).toUpperCase()}
+											</span>
+										</div>
+										<div className="flex-1">
+											{editingComment === comment.id ? (
+												<div className="space-y-2">
+													<textarea
+														value={editCommentText}
+														onChange={(e) => setEditCommentText(e.target.value)}
+														className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														rows="3"
+													/>
+													<div className="flex gap-2">
+														<button
+															onClick={() => handleEditComment(comment.id)}
+															className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+														>
+															Save
+														</button>
 														<button
 															onClick={() => {
-																setEditingComment(comment.id);
-																setEditCommentText(comment.content);
+																setEditingComment(null);
+																setEditCommentText("");
 															}}
-															className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1"
+															className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
 														>
-															<PencilIcon className="h-3 w-3" /> Edit
+															Cancel
 														</button>
-													)}
-													{(user?.id === comment.authorId || isAdmin) && (
-														<button
-															onClick={() =>
-																setDeleteConfirm({
-																	isOpen: true,
-																	commentId: comment.id,
-																})
-															}
-															className="text-xs text-gray-500 hover:text-red-600 flex items-center gap-1"
-														>
-															<TrashIcon className="h-3 w-3" /> Delete
-														</button>
-													)}
+													</div>
+												</div>
+											) : (
+												<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+													<div className="flex justify-between items-start mb-1">
+														<span className="text-sm font-semibold text-gray-900">
+															{comment.authorName}
+														</span>
+														<span className="text-xs text-gray-400">
+															{new Date(comment.createdAt).toLocaleString()}
+														</span>
+													</div>
+													<p className="text-sm text-gray-700 whitespace-pre-wrap">
+														{comment.content}
+													</p>
 												</div>
 											)}
+
+											{editingComment !== comment.id &&
+												(isCommentAuthor || canDeleteComment) && (
+													<div className="mt-1 flex justify-end gap-3">
+														{isCommentAuthor && (
+															<button
+																onClick={() => {
+																	setEditingComment(comment.id);
+																	setEditCommentText(comment.content);
+																}}
+																className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1"
+															>
+																<PencilIcon className="h-3 w-3" /> Edit
+															</button>
+														)}
+														{canDeleteComment && (
+															<button
+																onClick={() =>
+																	setDeleteConfirm({
+																		isOpen: true,
+																		commentId: comment.id,
+																	})
+																}
+																className="text-xs text-gray-500 hover:text-red-600 flex items-center gap-1"
+															>
+																<TrashIcon className="h-3 w-3" /> Delete
+															</button>
+														)}
+													</div>
+												)}
+										</div>
 									</div>
-								</div>
-							))}
+								);
+							})}
 						</div>
 					)}
 
@@ -769,7 +819,7 @@ export function IncidentDetail() {
 					>
 						<div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
 							<span className="text-white font-semibold text-sm">
-								{user?.fullName?.charAt(0).toUpperCase()}
+								{user?.fullName?.charAt(0).toUpperCase() || "?"}
 							</span>
 						</div>
 						<div className="flex-1">
@@ -878,6 +928,16 @@ export function IncidentDetail() {
 						commentId: null,
 					})
 				}
+			/>
+
+			<ConfirmDialog
+				isOpen={deleteTicketConfirm}
+				title="Delete Ticket"
+				message={`Are you sure you want to permanently delete ticket #${incident?.id}? This will remove all comments and attachments. This action cannot be undone.`}
+				confirmLabel={deletingTicket ? "Deleting..." : "Delete"}
+				destructive
+				onConfirm={handleDeleteTicket}
+				onCancel={() => setDeleteTicketConfirm(false)}
 			/>
 		</div>
 	);
