@@ -62,14 +62,13 @@ public class BookingService {
             throw new RuntimeException("Booking outside resource availability time");
         }
 
-        // Conflict check per resource
         List<Booking> conflicts = bookingRepository
-                .findByResourceAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                        resource,
-                        booking.getDate(),
-                        booking.getEndTime(),
-                        booking.getStartTime()
-                );
+            .findConflictingBookings(
+        resource,
+        booking.getDate(),
+        booking.getStartTime(),
+        booking.getEndTime()
+    );
 
         if (!conflicts.isEmpty()) {
             throw new RuntimeException("Time slot already booked for this resource!");

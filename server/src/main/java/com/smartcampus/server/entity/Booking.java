@@ -27,12 +27,12 @@ public class Booking {
 
     //RELATIONSHIP
     @ManyToOne
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
     // RELATIONSHIP
     @ManyToOne
-    @JoinColumn(name = "resourceID")
+    @JoinColumn(name = "resource_id")
     private Resource resource;
 
     public Booking() {}
