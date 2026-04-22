@@ -17,6 +17,7 @@ import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
 import com.smartcampus.server.exception.AccessDeniedException;
+import com.smartcampus.server.exception.BadRequestException;
 import com.smartcampus.server.exception.InvalidStatusTransitionException;
 import com.smartcampus.server.exception.ResourceNotFoundException;
 import com.smartcampus.server.repository.TicketAttachmentRepository;
@@ -92,14 +93,24 @@ public class IncidentServiceImpl implements IncidentService {
             TicketStatus status, TicketCategory category, TicketPriority priority, String search,
             Long currentUserId, String currentUserRole, Pageable pageable) {
 
-        if (isAdminOrTechnician(currentUserRole)) {
+        if ("ROLE_ADMIN".equals(currentUserRole)) {
+            // Admins see everything
             return ticketRepository
                     .findAllWithFilters(status, category, priority, search, pageable)
                     .map(TicketSummaryResponse::from);
+
+        } else if ("ROLE_TECHNICIAN".equals(currentUserRole)) {
+            // Technicians see ONLY tickets assigned to them
+            return ticketRepository
+                    .findByAssignedToWithFilters(currentUserId, status, category, priority, search, pageable)
+                    .map(TicketSummaryResponse::from);
+
+        } else {
+            // Standard Users see ONLY tickets they reported
+            return ticketRepository
+                    .findByUserWithFilters(currentUserId, status, category, search, pageable)
+                    .map(TicketSummaryResponse::from);
         }
-        return ticketRepository
-                .findByUserWithFilters(currentUserId, status, category, search, pageable)
-                .map(TicketSummaryResponse::from);
     }
 
     @Override
@@ -189,7 +200,14 @@ public class IncidentServiceImpl implements IncidentService {
         if (!"ROLE_ADMIN".equals(currentUserRole)) {
             throw new AccessDeniedException("Only admin can delete tickets");
         }
-        ticketRepository.delete(findTicket(ticketId));
+        Ticket ticket = findTicket(ticketId);
+        if (ticket.getStatus() != TicketStatus.OPEN && ticket.getStatus() != TicketStatus.REJECTED) {
+            throw new BadRequestException(
+                "Cannot delete a ticket that is " + ticket.getStatus() +
+                ". Only OPEN or REJECTED tickets can be deleted."
+            );
+        }
+        ticketRepository.delete(ticket);
     }
 
     @Override

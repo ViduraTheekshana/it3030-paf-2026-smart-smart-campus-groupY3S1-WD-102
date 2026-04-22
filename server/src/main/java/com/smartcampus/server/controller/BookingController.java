@@ -26,6 +26,7 @@ public class BookingController {
         @RequestParam Long resourceID,
         Authentication authentication
     ) {
+        
         return service.createBooking(booking, resourceID, authentication);  
     }
 

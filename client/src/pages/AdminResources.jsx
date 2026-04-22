@@ -104,13 +104,15 @@ export default function AdminResources() {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">Resource Management</h1>
                   <p className="text-gray-600">Manage and monitor all campus resources</p>
                 </div>
-                <button
-                  onClick={() => window.location.href = "/add"}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Resource
-                </button>
+                {isAdmin() && (
+                  <button
+                    onClick={() => window.location.href = "/resources/add"}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Resource
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -288,12 +290,14 @@ export default function AdminResources() {
                             <Eye className="w-4 h-4" />
                             View
                           </button>
-                          <button
-                            onClick={() => window.location.href = `/edit/${resource.resourceID}`}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
+                          {isAdmin() && (
+                            <button
+                              onClick={() => window.location.href = `/resources/edit/${resource.resourceID}`}
+                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </>
@@ -334,18 +338,22 @@ export default function AdminResources() {
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
-                            <button
-                                onClick={() => window.location.href = `/edit/${resource.resourceID}`}
-                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                            <button
-                                onClick={() => handleDelete(resource.resourceID)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            {isAdmin() && (
+                              <>
+                                <button
+                                    onClick={() => window.location.href = `/resources/edit/${resource.resourceID}`}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                <button
+                                    onClick={() => handleDelete(resource.resourceID)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-6 text-sm text-gray-600">

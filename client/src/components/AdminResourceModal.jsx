@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { 
   X, 
   MapPin, 
@@ -17,6 +18,7 @@ import {
 
 export default function AdminResourceModal({ resource, onClose, onDelete }) {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   if (!resource) return null;
 
@@ -177,22 +179,24 @@ export default function AdminResourceModal({ resource, onClose, onDelete }) {
           </div>
 
           {/* Admin Action Buttons */}
-          <div className="flex gap-2 pt-4 border-t border-gray-200">
-            <button 
-              onClick={() => navigate(`/edit/${resource.resourceID}`)}
-              className="flex-1 bg-yellow-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              Update Resource
-            </button>
-            <button 
-              onClick={() => onDelete(resource.resourceID)}
-              className="flex-1 bg-red-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete Resource
-            </button>
-          </div>
+          {isAdmin() && (
+            <div className="flex gap-2 pt-4 border-t border-gray-200">
+              <button 
+                onClick={() => navigate(`/resources/edit/${resource.resourceID}`)}
+                className="flex-1 bg-yellow-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                Update Resource
+              </button>
+              <button 
+                onClick={() => onDelete(resource.resourceID)}
+                className="flex-1 bg-red-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Resource
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

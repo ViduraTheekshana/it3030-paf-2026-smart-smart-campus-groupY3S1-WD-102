@@ -19,6 +19,10 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Profile from "./pages/Profile";
 import UserDashboard from "./pages/UserDashboard";
+import AdminBookingManagement from "./pages/AdminBookingManagement";
+import BookingPage from "./pages/BookingPage";
+import { Landing } from "./pages/Landing";
+
 // A simple layout component that includes the Header
 function MainLayout() {
 	return (
@@ -39,6 +43,7 @@ function App() {
 				<NotificationProvider>
 					<Toaster position="top-right" richColors />
 					<Routes>
+						<Route path="/" element={<Landing />} />
 						<Route path="/login" element={<Login />} />
 <Route path="/register" element={<Register />} />
 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -137,6 +142,16 @@ function App() {
 									</Layout>
 								</ProtectedRoute>
 							}
+
+						<Route
+  							path="/bookings"
+  							element={
+    						<ProtectedRoute>
+      							<Layout>
+        							<AdminBookingManagement />
+      							</Layout>
+    						</ProtectedRoute>
+  							}
 						/>
 					</Routes>
 				</NotificationProvider>

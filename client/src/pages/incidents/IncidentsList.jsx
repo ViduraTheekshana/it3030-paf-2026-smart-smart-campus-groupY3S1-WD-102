@@ -25,12 +25,8 @@ export function IncidentsList() {
 
 	const role = user?.role;
 	const isAdmin = role === "ROLE_ADMIN";
-	const isTechnician = role === "ROLE_TECHNICIAN" || role === "ROLE_ADMIN";
+	const isTechnician = role === "ROLE_TECHNICIAN";
 	const isUser = role === "ROLE_USER";
-
-	const [showOnlyAssigned, setShowOnlyAssigned] = useState(
-		isTechnician && !isAdmin,
-	);
 
 	const [filters, setFilters] = useState({
 		status: "",
@@ -39,8 +35,7 @@ export function IncidentsList() {
 		search: "",
 	});
 
-	// Pagination state
-	const [currentPage, setCurrentPage] = useState(0); // Spring Boot pages are 0-indexed
+	const [currentPage, setCurrentPage] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
 	const pageSize = 10;
 
@@ -51,20 +46,21 @@ export function IncidentsList() {
 		CLOSED: 0,
 	});
 
-	// 1. Hook for fetching table data (reacts to search/status filters AND page changes)
+	// 1. Fetch Incidents (Table Data)
 	useEffect(() => {
 		const fetchIncidents = async () => {
 			setLoading(true);
 			try {
-				// Include pagination params
 				const apiParams = { ...filters, page: currentPage, size: pageSize };
 
+				// Securely enforce role-based viewing
 				if (isUser) {
-					apiParams.reporterId = user?.id;
-				} else if (isTechnician && !isAdmin && showOnlyAssigned) {
-					apiParams.assignedTo = user?.id;
+					apiParams.reporterId = user?.userId || user?.id;
+				} else if (isTechnician) {
+					apiParams.assignedTo = user?.userId || user?.id;
 				}
 
+				// Clean up empty parameters before sending the request
 				Object.keys(apiParams).forEach((key) => {
 					if (
 						apiParams[key] === "" ||
@@ -78,7 +74,6 @@ export function IncidentsList() {
 				const response = await getIncidents(apiParams);
 
 				setIncidents(response.content || []);
-				// Update total pages from Spring Boot response
 				setTotalPages(response.totalPages || 0);
 			} catch (error) {
 				console.error("Failed to load incidents:", error);
@@ -94,24 +89,19 @@ export function IncidentsList() {
 		}, 300);
 
 		return () => clearTimeout(timeoutId);
-	}, [
-		filters,
-		currentPage,
-		role,
-		user?.id,
-		showOnlyAssigned,
-	]);
+	}, [filters, currentPage, isUser, isTechnician, user?.id, user?.userId]);
 
-	// 2. Hook for fetching dashboard counts (ignores search/status filters)
+	// 2. Fetch Status Counts (For the top cards)
 	useEffect(() => {
 		const fetchCounts = async () => {
 			try {
-				const baseParams = { size: 1 }; // Request minimal data just to get totalElements
+				const baseParams = { size: 1 }; // Only need the totalElements metadata
 
+				// Securely enforce role-based counting
 				if (isUser) {
-					baseParams.reporterId = user?.id;
-				} else if (isTechnician && !isAdmin && showOnlyAssigned) {
-					baseParams.assignedTo = user?.id;
+					baseParams.reporterId = user?.userId || user?.id;
+				} else if (isTechnician) {
+					baseParams.assignedTo = user?.userId || user?.id;
 				}
 
 				const [openRes, inProgressRes, resolvedRes, closedRes] =
@@ -138,7 +128,7 @@ export function IncidentsList() {
 		};
 
 		fetchCounts();
-	}, [role, user?.id, showOnlyAssigned]);
+	}, [isUser, isTechnician, user?.id, user?.userId]);
 
 	const handleFilterChange = (e) => {
 		const { name, value } = e.target;
@@ -146,7 +136,6 @@ export function IncidentsList() {
 			...prev,
 			[name]: value,
 		}));
-		// Reset to first page when any filter changes
 		setCurrentPage(0);
 	};
 
@@ -156,14 +145,11 @@ export function IncidentsList() {
 				title: "You haven't reported any incidents yet",
 				description: "Click 'Report Incident' to get started.",
 			};
-		} else if (isTechnician && !isAdmin) {
+		} else if (isTechnician) {
 			return {
-				title: showOnlyAssigned
-					? "No tickets assigned to you yet"
-					: "No tickets found",
-				description: showOnlyAssigned
-					? "Check 'All Tickets' to pick one up."
-					: "Try adjusting your filters.",
+				title: "No tickets assigned to you",
+				description:
+					"You will see tickets here when an admin assigns them to you.",
 			};
 		}
 		return {
@@ -179,32 +165,19 @@ export function IncidentsList() {
 					<h1 className="text-2xl font-bold text-gray-900">
 						{isUser
 							? "My Tickets"
-							: isTechnician && !isAdmin
-								? showOnlyAssigned
-									? "Assigned Tickets"
-									: "All Tickets"
+							: isTechnician
+								? "Assigned Tickets"
 								: "Incidents & Tickets"}
 					</h1>
 					<p className="text-sm text-gray-500 mt-1">
 						{isUser
 							? "Your reported maintenance issues"
-							: isTechnician && !isAdmin
-								? "Track and resolve campus issues"
+							: isTechnician
+								? "Your assigned campus issues to resolve"
 								: "Track and manage campus maintenance issues"}
 					</p>
 				</div>
 				<div className="flex gap-2">
-					{isTechnician && !isAdmin && (
-						<button
-							onClick={() => {
-								setShowOnlyAssigned(!showOnlyAssigned);
-								setCurrentPage(0); // Reset page on tab switch
-							}}
-							className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${showOnlyAssigned ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
-						>
-							{showOnlyAssigned ? "Show All Tickets" : "Show My Tickets"}
-						</button>
-					)}
 					{(isUser || isAdmin) && (
 						<Link
 							to="/incidents/new"
