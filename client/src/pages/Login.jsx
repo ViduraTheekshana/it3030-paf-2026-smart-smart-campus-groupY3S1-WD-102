@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { emailLogin, googleLogin, getCurrentUser } from "../services/auth";
 import { toast } from "sonner";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../config/firebase";
+import { auth, googleProvider, facebookProvider } from "../config/firebase";
 import {
 	GraduationCapIcon,
 	MailIcon,
@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 export function Login() {
 	const [loading, setLoading] = useState(false);
 	const [googleLoading, setGoogleLoading] = useState(false);
+	const [facebookLoading, setFacebookLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -25,9 +26,13 @@ export function Login() {
 	const { login, user } = useAuth();
 	const navigate = useNavigate();
 
-	useEffect(() => {
-		if (user) navigate("/dashboard");
-	}, [user, navigate]);
+	const redirectAfterLogin = (userData) => {
+		if (userData?.role === "ROLE_ADMIN") {
+			navigate("/dashboard");
+		} else {
+			navigate("/profile");
+		}
+	};
 
 	const validate = () => {
 		const newErrors = {};
@@ -46,15 +51,14 @@ export function Login() {
 
 		setLoading(true);
 		try {
-			const response = await emailLogin(email, password);
+			const response = await emailLogin(email.trim().toLowerCase(), password);
 
-			if (response.message === "Login successful") {
+			if (response.message === "Login successful" || response) {
 				try {
 					const userData = await getCurrentUser();
-
 					login(userData);
 					toast.success("Welcome back!");
-					navigate("/dashboard");
+					redirectAfterLogin(userData);
 				} catch (profileError) {
 					console.error(
 						"Failed to fetch user profile after login:",
@@ -79,16 +83,14 @@ export function Login() {
 		setGoogleLoading(true);
 		try {
 			const result = await signInWithPopup(auth, googleProvider);
-
 			const idToken = await result.user.getIdToken();
 
 			await googleLogin(idToken);
 
 			const userData = await getCurrentUser();
-
 			login(userData);
-			toast.success("Successfully logged in");
-			navigate("/dashboard");
+			toast.success("Successfully logged in with Google");
+			redirectAfterLogin(userData);
 		} catch (error) {
 			console.error("Google Login Error:", error);
 
@@ -100,28 +102,41 @@ export function Login() {
 		}
 	};
 
+	const handleFacebookLogin = async () => {
+		setFacebookLoading(true);
+		try {
+			const result = await signInWithPopup(auth, facebookProvider);
+			const idToken = await result.user.getIdToken();
+
+			await googleLogin(idToken);
+
+			const userData = await getCurrentUser();
+			login(userData);
+			toast.success("Successfully logged in with Facebook");
+			redirectAfterLogin(userData);
+		} catch (error) {
+			console.error("Facebook Login Error:", error);
+
+			if (error.code !== "auth/popup-closed-by-user") {
+				toast.error("Failed to sign in with Facebook");
+			}
+		} finally {
+			setFacebookLoading(false);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-			{/* Background decoration */}
 			<div className="absolute inset-0 overflow-hidden pointer-events-none">
 				<div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/8 rounded-full blur-3xl" />
 				<div className="absolute -bottom-40 -left-40 w-96 h-96 bg-cyan-600/8 rounded-full blur-3xl" />
 				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/4 rounded-full blur-3xl" />
 			</div>
 
-			{/* Brand header */}
 			<motion.div
-				initial={{
-					opacity: 0,
-					y: 20,
-				}}
-				animate={{
-					opacity: 1,
-					y: 0,
-				}}
-				transition={{
-					duration: 0.5,
-				}}
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.5 }}
 				className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
 			>
 				<div className="flex justify-center">
@@ -137,24 +152,13 @@ export function Login() {
 				</p>
 			</motion.div>
 
-			{/* Login card */}
 			<motion.div
-				initial={{
-					opacity: 0,
-					y: 20,
-				}}
-				animate={{
-					opacity: 1,
-					y: 0,
-				}}
-				transition={{
-					duration: 0.5,
-					delay: 0.1,
-				}}
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.5, delay: 0.1 }}
 				className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
 			>
 				<div className="bg-white py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
-					{/* Email/Password form */}
 					<form onSubmit={handleEmailLogin} className="space-y-4">
 						<div>
 							<label
@@ -181,7 +185,11 @@ export function Login() {
 									}}
 									placeholder="you@university.edu"
 									autoComplete="email"
-									className={`w-full pl-10 pr-4 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.email ? "border-red-300 bg-red-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}
+									className={`w-full pl-10 pr-4 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+										errors.email
+											? "border-red-300 bg-red-50"
+											: "border-gray-200 bg-gray-50 hover:border-gray-300"
+									}`}
 								/>
 							</div>
 							{errors.email && (
@@ -190,12 +198,21 @@ export function Login() {
 						</div>
 
 						<div>
-							<label
-								htmlFor="password"
-								className="block text-sm font-medium text-gray-700 mb-1.5"
-							>
-								Password
-							</label>
+							<div className="flex items-center justify-between mb-1.5">
+								<label
+									htmlFor="password"
+									className="block text-sm font-medium text-gray-700"
+								>
+									Password
+								</label>
+								<Link
+									to="/forgot-password"
+									className="text-xs font-medium text-blue-600 hover:text-blue-700"
+								>
+									Forgot password?
+								</Link>
+							</div>
+
 							<div className="relative">
 								<div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
 									<LockIcon className="h-4 w-4 text-gray-400" />
@@ -214,7 +231,11 @@ export function Login() {
 									}}
 									placeholder="Enter your password"
 									autoComplete="current-password"
-									className={`w-full pl-10 pr-11 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.password ? "border-red-300 bg-red-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}
+									className={`w-full pl-10 pr-11 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+										errors.password
+											? "border-red-300 bg-red-50"
+											: "border-gray-200 bg-gray-50 hover:border-gray-300"
+									}`}
 								/>
 								<button
 									type="button"
@@ -235,7 +256,7 @@ export function Login() {
 
 						<button
 							type="submit"
-							disabled={loading}
+							disabled={loading || googleLoading || facebookLoading}
 							className="w-full flex justify-center items-center gap-2 py-2.5 px-4 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-5"
 						>
 							{loading ? (
@@ -249,7 +270,6 @@ export function Login() {
 						</button>
 					</form>
 
-					{/* Divider */}
 					<div className="relative my-6">
 						<div className="absolute inset-0 flex items-center">
 							<div className="w-full border-t border-gray-200" />
@@ -261,10 +281,9 @@ export function Login() {
 						</div>
 					</div>
 
-					{/* Google Sign-in */}
 					<button
 						onClick={handleGoogleLogin}
-						disabled={googleLoading}
+						disabled={loading || googleLoading || facebookLoading}
 						className="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 					>
 						{googleLoading ? (
@@ -293,6 +312,37 @@ export function Login() {
 							</>
 						)}
 					</button>
+
+					<button
+						onClick={handleFacebookLogin}
+						disabled={loading || googleLoading || facebookLoading}
+						className="w-full mt-3 flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+					>
+						{facebookLoading ? (
+							<div className="h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+						) : (
+							<>
+								<svg
+									className="h-5 w-5 flex-shrink-0"
+									viewBox="0 0 24 24"
+									fill="#1877F2"
+								>
+									<path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073c0 6.019 4.388 10.999 10.125 11.927v-8.437H7.078v-3.49h3.047V9.413c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.514c-1.492 0-1.956.926-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.072 24 18.092 24 12.073z" />
+								</svg>
+								Sign in with Facebook
+							</>
+						)}
+					</button>
+
+					<p className="mt-6 text-center text-sm text-slate-500">
+						Don&apos;t have an account?{" "}
+						<Link
+							to="/register"
+							className="font-semibold text-blue-600 hover:text-blue-700"
+						>
+							Create account
+						</Link>
+					</p>
 				</div>
 			</motion.div>
 		</div>

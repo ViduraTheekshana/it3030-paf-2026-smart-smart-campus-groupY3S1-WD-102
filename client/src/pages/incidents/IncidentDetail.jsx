@@ -6,6 +6,8 @@ import {
 	updateIncidentStatus,
 	assignIncident,
 	deleteIncident,
+	uploadAttachments,
+	deleteAttachment,
 } from "../../services/incidents";
 import {
 	addComment,
@@ -32,6 +34,7 @@ import {
 	UploadIcon,
 	XIcon,
 } from "lucide-react";
+import { SlaTimer } from "../../components/common/SlaTimer";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import SecureAttachment from "../../components/SecureAttachment";
@@ -73,6 +76,7 @@ export function IncidentDetail() {
 	const [statusNotes, setStatusNotes] = useState("");
 	const [assignDropdown, setAssignDropdown] = useState(false);
 	const [files, setFiles] = useState([]);
+	const [uploadingFiles, setUploadingFiles] = useState(false);
 
 	const [technicians, setTechnicians] = useState([]);
 
@@ -254,12 +258,40 @@ export function IncidentDetail() {
 		);
 	};
 
+	const handleUploadFiles = async () => {
+		if (files.length === 0) return;
+		setUploadingFiles(true);
+		try {
+			await uploadAttachments(id, files);
+			setFiles([]);
+			fetchIncident();
+			toast.success(`${files.length} image${files.length > 1 ? "s" : ""} uploaded`);
+		} catch (error) {
+			const message = error.response?.data?.message || "Failed to upload images";
+			toast.error(message);
+		} finally {
+			setUploadingFiles(false);
+		}
+	};
+
+	const handleDeleteAttachment = async (attachmentId) => {
+		try {
+			await deleteAttachment(id, attachmentId);
+			fetchIncident();
+			toast.success("Attachment deleted");
+		} catch (error) {
+			toast.error("Failed to delete attachment");
+		}
+	};
+
 	if (loading) return <LoadingSkeleton count={3} height="h-48" />;
 	if (!incident) return null;
 
 	// --- PERMISSION LOGIC ---
 	const isOwner = currentUserId === incident.reportedById;
-	const canEdit = isAdmin || isOwner;
+	const canEdit =
+		(incident.status === "OPEN" && (isAdmin || isOwner)) ||
+		(incident.status === "IN_PROGRESS" && isAdmin);
 	const canDelete =
 		isAdmin &&
 		(incident.status === "OPEN" || incident.status === "REJECTED");
@@ -267,6 +299,10 @@ export function IncidentDetail() {
 		incident.status !== "CLOSED" && incident.status !== "REJECTED";
 	const canAssign =
 		isAdmin &&
+		(incident.status === "OPEN" || incident.status === "IN_PROGRESS");
+
+	const canManageAttachments =
+		(isOwner || isAdmin) &&
 		(incident.status === "OPEN" || incident.status === "IN_PROGRESS");
 
 	const canStartWork =
@@ -548,7 +584,7 @@ export function IncidentDetail() {
 						<div>
 							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
 								<ImageIcon className="h-4 w-4" />
-								Attachments
+								Attachments ({incident.attachments?.length || 0}/3)
 							</h3>
 							{incident.attachments?.length > 0 ? (
 								<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -557,6 +593,7 @@ export function IncidentDetail() {
 											key={att.id}
 											incidentId={incident.id}
 											attachment={att}
+											onDelete={canManageAttachments ? handleDeleteAttachment : undefined}
 										/>
 									))}
 								</div>
@@ -566,8 +603,8 @@ export function IncidentDetail() {
 								</div>
 							)}
 
-							{/* Upload more - ONLY visible to the reporter (isOwner) */}
-							{isOwner &&
+							{/* Add image button — owner or admin, OPEN or IN_PROGRESS only */}
+							{canManageAttachments &&
 								(incident.attachments?.length || 0) + files.length < 3 && (
 									<div className="mt-3">
 										<label className="inline-flex items-center gap-2 px-3 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
@@ -583,28 +620,41 @@ export function IncidentDetail() {
 									</div>
 								)}
 
-							{isOwner && files.length > 0 && (
-								<div className="mt-3 grid grid-cols-3 gap-3">
-									{files.map((file, index) => (
-										<div
-											key={index}
-											className="relative group rounded-lg overflow-hidden border border-gray-200"
-										>
-											<img
-												src={URL.createObjectURL(file)}
-												alt={`Preview ${index}`}
-												className="h-24 w-full object-cover"
-											/>
-											<button
-												onClick={() =>
-													setFiles((prev) => prev.filter((_, i) => i !== index))
-												}
-												className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+							{/* Pending previews + upload button */}
+							{canManageAttachments && files.length > 0 && (
+								<div className="mt-3 space-y-3">
+									<div className="grid grid-cols-3 gap-3">
+										{files.map((file, index) => (
+											<div
+												key={index}
+												className="relative group rounded-lg overflow-hidden border border-gray-200"
 											>
-												<XIcon className="h-3 w-3" />
-											</button>
-										</div>
-									))}
+												<img
+													src={URL.createObjectURL(file)}
+													alt={`Preview ${index}`}
+													className="h-24 w-full object-cover"
+												/>
+												<button
+													onClick={() =>
+														setFiles((prev) => prev.filter((_, i) => i !== index))
+													}
+													className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+												>
+													<XIcon className="h-3 w-3" />
+												</button>
+											</div>
+										))}
+									</div>
+									<button
+										onClick={handleUploadFiles}
+										disabled={uploadingFiles}
+										className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+									>
+										<UploadIcon className="h-4 w-4" />
+										{uploadingFiles
+											? "Uploading..."
+											: `Upload ${files.length} image${files.length > 1 ? "s" : ""}`}
+									</button>
 								</div>
 							)}
 						</div>
@@ -697,6 +747,10 @@ export function IncidentDetail() {
 								</div>
 							</div>
 						</div>
+
+						{incident.minutesElapsed !== undefined && (
+							<SlaTimer ticket={incident} />
+						)}
 					</div>
 				</div>
 			</motion.div>

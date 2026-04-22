@@ -26,6 +26,7 @@ import com.smartcampus.server.repository.TicketRepository;
 import com.smartcampus.server.repository.UserRepository;
 import com.smartcampus.server.service.IncidentService;
 import com.smartcampus.server.util.FileStorageUtil;
+import com.smartcampus.server.util.SlaPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -166,6 +168,10 @@ public class IncidentServiceImpl implements IncidentService {
 
     ticket.setStatus(newStatus);
 
+    if (newStatus == TicketStatus.RESOLVED && ticket.getResolvedAt() == null) {
+        ticket.setResolvedAt(LocalDateTime.now());
+    }
+
     if (newStatus == TicketStatus.RESOLVED && request.getResolutionNotes() != null) {
         ticket.setResolutionNotes(request.getResolutionNotes());
     }
@@ -192,6 +198,9 @@ public class IncidentServiceImpl implements IncidentService {
         if (ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(LocalDateTime.now());
+        }
         return TicketResponse.from(ticketRepository.save(ticket));
     }
 
@@ -212,11 +221,17 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public AttachmentResponse uploadAttachment(UUID ticketId, MultipartFile file,
-                                                Long currentUserId) throws IOException {
+                                                Long currentUserId, String currentUserRole) throws IOException {
         Ticket ticket = findTicket(ticketId);
 
-        if (!ticket.getReportedBy().getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("Only the ticket owner can upload attachments");
+        boolean isAdmin = "ROLE_ADMIN".equals(currentUserRole);
+        boolean isOwner = ticket.getReportedBy().getUserId().equals(currentUserId);
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("Only the ticket owner or an admin can upload attachments");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN && ticket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new BadRequestException("Attachments can only be added to OPEN or IN_PROGRESS tickets");
         }
         if (attachmentRepository.countByTicketId(ticketId) >= 3) {
             throw new IllegalArgumentException("Maximum 3 attachments allowed per ticket");
@@ -274,6 +289,11 @@ public CommentResponse addComment(UUID ticketId, CreateCommentRequest request,
                                   Long currentUserId) {
     Ticket ticket = findTicket(ticketId);
     User author = findUser(currentUserId);
+
+    if (ticket.getFirstResponseAt() == null) {
+        ticket.setFirstResponseAt(LocalDateTime.now());
+        ticketRepository.save(ticket);
+    }
 
     TicketComment comment = TicketComment.builder()
             .ticket(ticket)

@@ -77,6 +77,10 @@ public class Ticket {
     @Builder.Default
     private List<TicketComment> comments = new ArrayList<>();
 
+    private LocalDateTime firstResponseAt;
+
+    private LocalDateTime resolvedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

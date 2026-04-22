@@ -8,13 +8,17 @@ import com.smartcampus.server.dto.response.AttachmentResponse;
 import com.smartcampus.server.dto.response.CommentResponse;
 import com.smartcampus.server.dto.response.TicketResponse;
 import com.smartcampus.server.dto.response.TicketSummaryResponse;
+import com.smartcampus.server.entity.Ticket;
 import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
+import com.smartcampus.server.exception.AccessDeniedException;
 import com.smartcampus.server.exception.ResourceNotFoundException;
 import com.smartcampus.server.model.User;
+import com.smartcampus.server.repository.TicketRepository;
 import com.smartcampus.server.repository.UserRepository;
 import com.smartcampus.server.service.IncidentService;
+import com.smartcampus.server.util.SlaPolicy;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -38,6 +44,7 @@ public class IncidentController {
 
     private final IncidentService incidentService;
     private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
 
     // Auth helpers
     private User currentUser() {
@@ -55,6 +62,34 @@ public class IncidentController {
         return currentUser().getRole().name();
     }
 
+
+    // SLA summary (admin only)
+    @GetMapping("/sla-summary")
+    public ResponseEntity<Map<String, Object>> getSlaSummary() {
+        if (!"ROLE_ADMIN".equals(currentUserRole())) {
+            throw new AccessDeniedException("Only admins can view SLA summary");
+        }
+        List<Ticket> openTickets = ticketRepository.findAllOpenTickets();
+
+        long breachedFirstResponse = openTickets.stream()
+                .filter(SlaPolicy::isFirstResponseBreached)
+                .count();
+
+        long breachedResolution = openTickets.stream()
+                .filter(SlaPolicy::isResolutionBreached)
+                .count();
+
+        long total = openTickets.size();
+        int healthPercent = total == 0 ? 100 :
+                (int) ((total - breachedResolution) * 100.0 / total);
+
+        return ResponseEntity.ok(Map.of(
+                "total", total,
+                "breachedFirstResponse", breachedFirstResponse,
+                "breachedResolution", breachedResolution,
+                "slaHealthPercent", healthPercent
+        ));
+    }
 
     // Ticket CRUD
     @PostMapping
@@ -123,7 +158,7 @@ public class IncidentController {
             @RequestParam("file") MultipartFile file) throws IOException {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(incidentService.uploadAttachment(id, file, currentUserId()));
+                .body(incidentService.uploadAttachment(id, file, currentUserId(), currentUserRole()));
     }
 
     @GetMapping("/{id}/attachments/{attachmentId}")
