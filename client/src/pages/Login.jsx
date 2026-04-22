@@ -26,10 +26,9 @@ export function Login() {
 	const { login, user } = useAuth();
 	const navigate = useNavigate();
 
-	
 	const redirectAfterLogin = (userData) => {
 		if (userData?.role === "ROLE_ADMIN") {
-			navigate("/userdashboard");
+			navigate("/dashboard");
 		} else {
 			navigate("/profile");
 		}
@@ -323,7 +322,11 @@ export function Login() {
 							<div className="h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
 						) : (
 							<>
-								<svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="#1877F2">
+								<svg
+									className="h-5 w-5 flex-shrink-0"
+									viewBox="0 0 24 24"
+									fill="#1877F2"
+								>
 									<path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073c0 6.019 4.388 10.999 10.125 11.927v-8.437H7.078v-3.49h3.047V9.413c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.514c-1.492 0-1.956.926-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.072 24 18.092 24 12.073z" />
 								</svg>
 								Sign in with Facebook

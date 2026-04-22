@@ -45,9 +45,9 @@ function App() {
 					<Routes>
 						<Route path="/" element={<Landing />} />
 						<Route path="/login" element={<Login />} />
-<Route path="/register" element={<Register />} />
-<Route path="/forgot-password" element={<ForgotPassword />} />
-<Route
+						<Route path="/register" element={<Register />} />
+						<Route path="/forgot-password" element={<ForgotPassword />} />
+						<Route
 							path="/profile"
 							element={
 								<ProtectedRoute>
@@ -68,7 +68,7 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
-						
+
 						<Route
 							path="/resources/add"
 							element={
@@ -134,7 +134,7 @@ function App() {
 							}
 						/>
 						<Route
-							path="/userdashboard"
+							path="/dashboard"
 							element={
 								<ProtectedRoute>
 									<Layout>
@@ -142,17 +142,17 @@ function App() {
 									</Layout>
 								</ProtectedRoute>
 							}
-							/>
+						/>
 
 						<Route
-  							path="/bookings"
-  							element={
-    						<ProtectedRoute>
-      							<Layout>
-        							<AdminBookingManagement />
-      							</Layout>
-    						</ProtectedRoute>
-  							}
+							path="/bookings"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AdminBookingManagement />
+									</Layout>
+								</ProtectedRoute>
+							}
 						/>
 					</Routes>
 				</NotificationProvider>

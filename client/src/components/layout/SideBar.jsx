@@ -71,11 +71,6 @@ export function Sidebar() {
 			href: "/incidents",
 			icon: AlertTriangleIcon,
 		});
-		navigation.push({
-			name: "Admin Panel",
-			href: "/admin",
-			icon: ShieldIcon,
-		});
 	}
 	const roleAccent = getRoleAccent();
 	const borderAccentClass =
