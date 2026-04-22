@@ -17,6 +17,7 @@ import { CreateIncident } from "./pages/incidents/CreateIncident";
 import { IncidentDetail } from "./pages/incidents/IncidentDetail";
 import AdminBookingManagement from "./pages/AdminBookingManagement";
 import BookingPage from "./pages/BookingPage";
+import { Landing } from "./pages/Landing";
 
 // A simple layout component that includes the Header
 function MainLayout() {
@@ -38,6 +39,7 @@ function App() {
 				<NotificationProvider>
 					<Toaster position="top-right" richColors />
 					<Routes>
+						<Route path="/" element={<Landing />} />
 						<Route path="/login" element={<Login />} />
 
 						{/* Resource Management Routes */}
