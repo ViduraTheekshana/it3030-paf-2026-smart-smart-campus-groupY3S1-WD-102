@@ -158,7 +158,7 @@ public class IncidentController {
             @RequestParam("file") MultipartFile file) throws IOException {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(incidentService.uploadAttachment(id, file, currentUserId()));
+                .body(incidentService.uploadAttachment(id, file, currentUserId(), currentUserRole()));
     }
 
     @GetMapping("/{id}/attachments/{attachmentId}")
