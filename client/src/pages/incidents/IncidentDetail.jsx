@@ -5,6 +5,7 @@ import {
 	updateIncident,
 	updateIncidentStatus,
 	assignIncident,
+	deleteIncident,
 } from "../../services/incidents";
 import {
 	addComment,
@@ -58,6 +59,9 @@ export function IncidentDetail() {
 		commentId: null,
 	});
 
+	const [deleteTicketConfirm, setDeleteTicketConfirm] = useState(false);
+	const [deletingTicket, setDeletingTicket] = useState(false);
+
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({});
 	const [savingEdit, setSavingEdit] = useState(false);
@@ -105,6 +109,22 @@ export function IncidentDetail() {
 		loadTechnicians();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id, role]);
+
+	const handleDeleteTicket = async () => {
+		setDeletingTicket(true);
+		try {
+			await deleteIncident(id);
+			toast.success("Ticket deleted successfully");
+			navigate("/incidents");
+		} catch (error) {
+			const message =
+				error.response?.data?.message || "Failed to delete ticket";
+			toast.error(message);
+		} finally {
+			setDeletingTicket(false);
+			setDeleteTicketConfirm(false);
+		}
+	};
 
 	const startEditing = () => {
 		setEditForm({
@@ -240,6 +260,9 @@ export function IncidentDetail() {
 	// --- PERMISSION LOGIC ---
 	const isOwner = currentUserId === incident.reportedById;
 	const canEdit = isAdmin || isOwner;
+	const canDelete =
+		isAdmin &&
+		(incident.status === "OPEN" || incident.status === "REJECTED");
 	const canChangeStatus =
 		incident.status !== "CLOSED" && incident.status !== "REJECTED";
 	const canAssign =
@@ -297,6 +320,16 @@ export function IncidentDetail() {
 								>
 									<PencilIcon className="h-4 w-4" />
 									Edit
+								</button>
+							)}
+							{/* Delete button — admin, OPEN or REJECTED only */}
+							{canDelete && (
+								<button
+									onClick={() => setDeleteTicketConfirm(true)}
+									className="px-4 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200 flex items-center gap-2"
+								>
+									<TrashIcon className="h-4 w-4" />
+									Delete
 								</button>
 							)}
 							{/* Assign button - ADMIN only */}
@@ -895,6 +928,16 @@ export function IncidentDetail() {
 						commentId: null,
 					})
 				}
+			/>
+
+			<ConfirmDialog
+				isOpen={deleteTicketConfirm}
+				title="Delete Ticket"
+				message={`Are you sure you want to permanently delete ticket #${incident?.id}? This will remove all comments and attachments. This action cannot be undone.`}
+				confirmLabel={deletingTicket ? "Deleting..." : "Delete"}
+				destructive
+				onConfirm={handleDeleteTicket}
+				onCancel={() => setDeleteTicketConfirm(false)}
 			/>
 		</div>
 	);
