@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getIncidents } from "../../services/incidents";
+import { getIncidents, getSlaSummary } from "../../services/incidents";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { PriorityBadge } from "../../components/common/PriorityBadge";
+import { SlaBadge } from "../../components/common/SlaBadge";
 import { LoadingSkeleton } from "../../components/common/LoadingSkeleton";
 import { EmptyState } from "../../components/common/EmptyState";
 import {
@@ -13,6 +14,7 @@ import {
 	UserIcon,
 	ChevronLeft,
 	ChevronRight,
+	AlertTriangleIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
@@ -45,6 +47,8 @@ export function IncidentsList() {
 		RESOLVED: 0,
 		CLOSED: 0,
 	});
+
+	const [slaSummary, setSlaSummary] = useState(null);
 
 	// 1. Fetch Incidents (Table Data)
 	useEffect(() => {
@@ -130,6 +134,14 @@ export function IncidentsList() {
 		fetchCounts();
 	}, [isUser, isTechnician, user?.id, user?.userId]);
 
+	// 3. Fetch SLA Summary (admin only)
+	useEffect(() => {
+		if (!isAdmin) return;
+		getSlaSummary()
+			.then(setSlaSummary)
+			.catch(() => {});
+	}, [isAdmin]);
+
 	const handleFilterChange = (e) => {
 		const { name, value } = e.target;
 		setFilters((prev) => ({
@@ -191,7 +203,7 @@ export function IncidentsList() {
 			</div>
 
 			{/* Status summary cards */}
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+			<div className={`grid gap-4 ${isAdmin ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4"}`}>
 				{[
 					{
 						label: "Open",
@@ -235,6 +247,24 @@ export function IncidentsList() {
 						</p>
 					</button>
 				))}
+
+				{/* SLA breach card — admin only */}
+				{isAdmin && slaSummary && (
+					<div className={`rounded-xl border p-4 text-left ${slaSummary.breachedResolution > 0 ? "bg-red-50 border-red-300" : "bg-white border-gray-200"}`}>
+						<div className="flex items-center gap-1.5 mb-1">
+							<AlertTriangleIcon className={`h-4 w-4 ${slaSummary.breachedResolution > 0 ? "text-red-500" : "text-gray-400"}`} />
+							<p className={`text-sm font-medium ${slaSummary.breachedResolution > 0 ? "text-red-600" : "text-gray-500"}`}>
+								SLA Breached
+							</p>
+						</div>
+						<p className={`text-2xl font-bold mt-1 ${slaSummary.breachedResolution > 0 ? "text-red-700" : "text-gray-900"}`}>
+							{slaSummary.breachedResolution}
+						</p>
+						<p className="text-xs text-gray-400 mt-0.5">
+							{slaSummary.slaHealthPercent}% healthy
+						</p>
+					</div>
+				)}
 			</div>
 
 			{/* Filters */}
@@ -323,6 +353,7 @@ export function IncidentsList() {
 												</span>
 												<StatusBadge status={incident.status} />
 												<PriorityBadge priority={incident.priority} />
+												<SlaBadge ticket={incident} />
 												<span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
 													{incident.category}
 												</span>

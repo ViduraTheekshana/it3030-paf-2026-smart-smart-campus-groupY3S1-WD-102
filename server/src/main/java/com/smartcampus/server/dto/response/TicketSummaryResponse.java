@@ -4,9 +4,11 @@ import com.smartcampus.server.entity.Ticket;
 import com.smartcampus.server.enums.TicketCategory;
 import com.smartcampus.server.enums.TicketPriority;
 import com.smartcampus.server.enums.TicketStatus;
+import com.smartcampus.server.util.SlaPolicy;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -26,6 +28,16 @@ public class TicketSummaryResponse {
     private int commentCount;
     private LocalDateTime createdAt;
 
+    // SLA fields
+    private long minutesElapsed;
+    private long firstResponseDeadlineMinutes;
+    private long resolutionDeadlineMinutes;
+    private boolean firstResponseBreached;
+    private boolean resolutionBreached;
+    private boolean firstResponseMet;
+    private LocalDateTime firstResponseAt;
+    private LocalDateTime resolvedAt;
+
     public static TicketSummaryResponse from(Ticket t) {
         return TicketSummaryResponse.builder()
                 .id(t.getId())
@@ -39,6 +51,14 @@ public class TicketSummaryResponse {
                 .attachmentCount(t.getAttachments().size())
                 .commentCount(t.getComments().size())
                 .createdAt(t.getCreatedAt())
+                .minutesElapsed(Duration.between(t.getCreatedAt(), LocalDateTime.now()).toMinutes())
+                .firstResponseDeadlineMinutes(SlaPolicy.forPriority(t.getPriority()).firstResponse().toMinutes())
+                .resolutionDeadlineMinutes(SlaPolicy.forPriority(t.getPriority()).resolution().toMinutes())
+                .firstResponseBreached(SlaPolicy.isFirstResponseBreached(t))
+                .resolutionBreached(SlaPolicy.isResolutionBreached(t))
+                .firstResponseMet(t.getFirstResponseAt() != null)
+                .firstResponseAt(t.getFirstResponseAt())
+                .resolvedAt(t.getResolvedAt())
                 .build();
     }
 }

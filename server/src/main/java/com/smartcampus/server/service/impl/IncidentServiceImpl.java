@@ -26,6 +26,7 @@ import com.smartcampus.server.repository.TicketRepository;
 import com.smartcampus.server.repository.UserRepository;
 import com.smartcampus.server.service.IncidentService;
 import com.smartcampus.server.util.FileStorageUtil;
+import com.smartcampus.server.util.SlaPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -166,6 +168,10 @@ public class IncidentServiceImpl implements IncidentService {
 
     ticket.setStatus(newStatus);
 
+    if (newStatus == TicketStatus.RESOLVED && ticket.getResolvedAt() == null) {
+        ticket.setResolvedAt(LocalDateTime.now());
+    }
+
     if (newStatus == TicketStatus.RESOLVED && request.getResolutionNotes() != null) {
         ticket.setResolutionNotes(request.getResolutionNotes());
     }
@@ -191,6 +197,9 @@ public class IncidentServiceImpl implements IncidentService {
         ticket.setAssignedTo(technician);
         if (ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
+        }
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(LocalDateTime.now());
         }
         return TicketResponse.from(ticketRepository.save(ticket));
     }
@@ -274,6 +283,11 @@ public CommentResponse addComment(UUID ticketId, CreateCommentRequest request,
                                   Long currentUserId) {
     Ticket ticket = findTicket(ticketId);
     User author = findUser(currentUserId);
+
+    if (ticket.getFirstResponseAt() == null) {
+        ticket.setFirstResponseAt(LocalDateTime.now());
+        ticketRepository.save(ticket);
+    }
 
     TicketComment comment = TicketComment.builder()
             .ticket(ticket)

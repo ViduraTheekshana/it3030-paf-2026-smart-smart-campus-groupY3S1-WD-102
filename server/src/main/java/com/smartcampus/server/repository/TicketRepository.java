@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -53,6 +54,9 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             @Param("search") String search,
             Pageable pageable
     );
+
+    @Query("SELECT t FROM Ticket t WHERE t.status NOT IN (com.smartcampus.server.enums.TicketStatus.CLOSED, com.smartcampus.server.enums.TicketStatus.RESOLVED, com.smartcampus.server.enums.TicketStatus.REJECTED)")
+    List<Ticket> findAllOpenTickets();
 
     // Regular user: see only their own tickets with optional filters
     @Query("""
