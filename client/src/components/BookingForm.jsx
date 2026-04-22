@@ -137,7 +137,7 @@ const BookingForm = ({ addBooking, userId }) => {
         status: "PENDING",
       };
 
-      await createBooking(payload, userId, selectedResource);
+      await createBooking(payload, selectedResource);
 
       addBooking(payload); // update UI instantly
 
