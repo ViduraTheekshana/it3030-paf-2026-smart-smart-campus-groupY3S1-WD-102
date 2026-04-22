@@ -67,6 +67,11 @@ export const deleteAttachment = async (id, attachmentId) => {
 	return response.data;
 };
 
+export const getSlaSummary = async () => {
+	const response = await api.get("/incidents/sla-summary");
+	return response.data;
+};
+
 export const getAttachmentBlob = async (incidentId, attachmentId) => {
 	const response = await api.get(
 		`/incidents/${incidentId}/attachments/${attachmentId}`,

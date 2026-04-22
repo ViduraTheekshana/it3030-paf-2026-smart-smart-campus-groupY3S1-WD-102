@@ -32,6 +32,7 @@ import {
 	UploadIcon,
 	XIcon,
 } from "lucide-react";
+import { SlaTimer } from "../../components/common/SlaTimer";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import SecureAttachment from "../../components/SecureAttachment";
@@ -699,6 +700,10 @@ export function IncidentDetail() {
 								</div>
 							</div>
 						</div>
+
+						{incident.minutesElapsed !== undefined && (
+							<SlaTimer ticket={incident} />
+						)}
 					</div>
 				</div>
 			</motion.div>
