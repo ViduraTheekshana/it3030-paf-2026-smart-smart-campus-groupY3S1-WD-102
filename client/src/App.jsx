@@ -15,7 +15,10 @@ import { Layout } from "./components/layout/Layout";
 import { IncidentsList } from "./pages/incidents/IncidentsList";
 import { CreateIncident } from "./pages/incidents/CreateIncident";
 import { IncidentDetail } from "./pages/incidents/IncidentDetail";
-
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import Profile from "./pages/Profile";
+import UserDashboard from "./pages/UserDashboard";
 // A simple layout component that includes the Header
 function MainLayout() {
 	return (
@@ -37,7 +40,18 @@ function App() {
 					<Toaster position="top-right" richColors />
 					<Routes>
 						<Route path="/login" element={<Login />} />
-
+<Route path="/register" element={<Register />} />
+<Route path="/forgot-password" element={<ForgotPassword />} />
+<Route
+							path="/profile"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<Profile />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 						{/* Resource Management Routes */}
 						<Route
 							path="/resources"
@@ -49,6 +63,7 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+						
 						<Route
 							path="/resources/add"
 							element={
@@ -109,6 +124,16 @@ function App() {
 								<ProtectedRoute>
 									<Layout>
 										<IncidentDetail />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/userdashboard"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<UserDashboard />
 									</Layout>
 								</ProtectedRoute>
 							}

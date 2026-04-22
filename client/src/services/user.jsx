@@ -18,6 +18,11 @@ export const getAdmins = async () => {
 	return await getUsersByRole("ROLE_ADMIN");
 };
 
+export const getManagers = async () => {
+	return await getUsersByRole("ROLE_MANAGER");
+};
+
 export const getRegularUsers = async () => {
 	return await getUsersByRole("ROLE_USER");
 };
+
