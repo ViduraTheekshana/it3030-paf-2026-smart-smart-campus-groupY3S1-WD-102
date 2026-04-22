@@ -2,11 +2,15 @@ import React from "react";
 import { AlertTriangleIcon, ClockIcon, CheckCircleIcon } from "lucide-react";
 
 export function SlaBadge({ ticket }) {
-    const { status, resolutionBreached, firstResponseMet } = ticket;
+    const { status, resolutionBreached } = ticket;
 
     if (status === "RESOLVED" || status === "CLOSED" || status === "REJECTED") {
         return null;
     }
+
+    // Non-OPEN tickets have been responded to — guard against pre-migration tickets
+    // where firstResponseAt was never stamped even though assignment already happened.
+    const firstResponseMet = ticket.firstResponseMet || status !== "OPEN";
 
     if (resolutionBreached) {
         return (

@@ -221,11 +221,17 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public AttachmentResponse uploadAttachment(UUID ticketId, MultipartFile file,
-                                                Long currentUserId) throws IOException {
+                                                Long currentUserId, String currentUserRole) throws IOException {
         Ticket ticket = findTicket(ticketId);
 
-        if (!ticket.getReportedBy().getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("Only the ticket owner can upload attachments");
+        boolean isAdmin = "ROLE_ADMIN".equals(currentUserRole);
+        boolean isOwner = ticket.getReportedBy().getUserId().equals(currentUserId);
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("Only the ticket owner or an admin can upload attachments");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN && ticket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new BadRequestException("Attachments can only be added to OPEN or IN_PROGRESS tickets");
         }
         if (attachmentRepository.countByTicketId(ticketId) >= 3) {
             throw new IllegalArgumentException("Maximum 3 attachments allowed per ticket");

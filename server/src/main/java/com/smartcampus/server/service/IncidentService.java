@@ -39,7 +39,7 @@ public interface IncidentService {
     void deleteTicket(UUID ticketId, String currentUserRole);
 
     AttachmentResponse uploadAttachment(UUID ticketId, MultipartFile file,
-                                        Long currentUserId) throws IOException;
+                                        Long currentUserId, String currentUserRole) throws IOException;
 
     void deleteAttachment(UUID ticketId, UUID attachmentId,
                           Long currentUserId, String currentUserRole) throws IOException;

@@ -79,8 +79,14 @@ export function SlaTimer({ ticket }) {
     const isResolved =
         ticket.status === "RESOLVED" || ticket.status === "CLOSED";
 
+    // A ticket that is no longer OPEN has received a first response (assigned /
+    // moved to IN_PROGRESS). Guard against tickets that existed before the SLA
+    // migration where firstResponseAt was never stamped.
+    const firstResponseMet =
+        ticket.firstResponseMet || ticket.status !== "OPEN";
+
     const firstResponseBreached =
-        !ticket.firstResponseMet &&
+        !firstResponseMet &&
         elapsed > ticket.firstResponseDeadlineMinutes;
 
     return (
@@ -97,7 +103,7 @@ export function SlaTimer({ ticket }) {
                 deadlineMinutes={ticket.firstResponseDeadlineMinutes}
                 elapsedMinutes={elapsed}
                 breached={firstResponseBreached}
-                met={ticket.firstResponseMet}
+                met={firstResponseMet}
                 metLabel="Met ✓"
             />
 
