@@ -179,7 +179,7 @@ export default function AdminResourceModal({ resource, onClose, onDelete }) {
           {/* Admin Action Buttons */}
           <div className="flex gap-2 pt-4 border-t border-gray-200">
             <button 
-              onClick={() => navigate(`/edit/${resource.resourceID}`)}
+              onClick={() => navigate(`/resources/edit/${resource.resourceID}`)}
               className="flex-1 bg-yellow-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
             >
               <Edit className="w-4 h-4" />
