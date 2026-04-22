@@ -25,5 +25,8 @@ export const approveBooking = (id) =>
 // REJECT
 export const rejectBooking = (id, reason) =>
   axios.put(`${BASE_URL}/${id}/reject`, null, {
-    params: { rejectReason: reason }
+    params: { rejectReason: reason },
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });

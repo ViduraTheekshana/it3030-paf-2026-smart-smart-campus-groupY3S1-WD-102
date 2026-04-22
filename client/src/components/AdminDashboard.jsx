@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getAllBookings, approveBooking, rejectBooking } from "../api/BookingApi";
 
 const AdminDashboard = () => {
+  const token = localStorage.getItem("token");
   const [bookings, setBookings] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
