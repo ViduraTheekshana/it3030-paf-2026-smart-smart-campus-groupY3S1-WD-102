@@ -16,7 +16,7 @@ import java.util.UUID;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
-    // Admin / Technician: see all tickets with optional filters
+    // Admin: see all tickets with optional filters
     @Query("""
             SELECT t FROM Ticket t
             WHERE (:status IS NULL OR t.status = :status)
@@ -27,6 +27,26 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
                  OR LOWER(CAST(t.description AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
     Page<Ticket> findAllWithFilters(
+            @Param("status") TicketStatus status,
+            @Param("category") TicketCategory category,
+            @Param("priority") TicketPriority priority,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    // Technician: see ONLY tickets assigned to them with optional filters
+    @Query("""
+            SELECT t FROM Ticket t
+            WHERE t.assignedTo.id = :technicianId
+            AND (:status IS NULL OR t.status = :status)
+            AND (:category IS NULL OR t.category = :category)
+            AND (:priority IS NULL OR t.priority = :priority)
+            AND (:search IS NULL
+                 OR LOWER(CAST(t.title AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                 OR LOWER(CAST(t.description AS String)) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
+            """)
+    Page<Ticket> findByAssignedToWithFilters(
+            @Param("technicianId") Long technicianId,
             @Param("status") TicketStatus status,
             @Param("category") TicketCategory category,
             @Param("priority") TicketPriority priority,
