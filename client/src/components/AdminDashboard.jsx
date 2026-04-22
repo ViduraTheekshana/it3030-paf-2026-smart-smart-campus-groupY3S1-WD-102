@@ -143,7 +143,7 @@ const AdminDashboard = () => {
 
       {/* Modal */}
       {rejectModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
           <div className="bg-white p-4 w-96">
             <textarea
               className="border w-full p-2"
