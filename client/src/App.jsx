@@ -15,6 +15,8 @@ import { Layout } from "./components/layout/Layout";
 import { IncidentsList } from "./pages/incidents/IncidentsList";
 import { CreateIncident } from "./pages/incidents/CreateIncident";
 import { IncidentDetail } from "./pages/incidents/IncidentDetail";
+import AdminBookingManagement from "./pages/AdminBookingManagement";
+import BookingPage from "./pages/BookingPage";
 
 // A simple layout component that includes the Header
 function MainLayout() {
@@ -113,6 +115,30 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+
+						<Route
+							path="/bookings"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<AdminBookingManagement />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path="/bookings/create"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<BookingPage/>
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
+
+
 					</Routes>
 				</NotificationProvider>
 			</AuthProvider>

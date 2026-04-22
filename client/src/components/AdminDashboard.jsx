@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { getBookings, approveBooking, rejectBooking } from "../api/BookingApi";
+import { getAllBookings, approveBooking, rejectBooking } from "../api/BookingApi";
 import { Link } from "react-router-dom";
 
 const AdminDashboard = () => {
+  const token = localStorage.getItem("token");
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,9 @@ const AdminDashboard = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await getBookings();
+      //const response = await getBookings();
+      //const token = localStorage.getItem("token");
+      const response = await getAllBookings(token);
       setBookings(response.data);
       setError("");
     } catch (err) {
@@ -89,7 +92,7 @@ const AdminDashboard = () => {
 
   const handleApprove = async (bookingId) => {
     try {
-      await approveBooking(bookingId);
+      await approveBooking(bookingId, token);
       await fetchBookings();
       alert("Booking approved successfully!");
     } catch (err) {
@@ -104,7 +107,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await rejectBooking(rejectModal.bookingId, rejectModal.reason);
+      await rejectBooking(rejectModal.bookingId, rejectModal.reason, token);
       await fetchBookings();
       setRejectModal({ isOpen: false, bookingId: null, reason: "" });
       alert("Booking rejected successfully!");
@@ -159,64 +162,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-64" : "w-16"} bg-white shadow-lg transition-all duration-300`}>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className={`font-bold text-xl text-gray-900 ${!sidebarOpen && "hidden"}`}>
-              Admin Panel
-            </h1>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-
-          <nav className="space-y-2">
-            <Link
-              to="/admin/bookings"
-              className="flex items-center p-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100"
-            >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              {sidebarOpen && "Bookings"}
-            </Link>
-            <Link
-              to="/resources"
-              className="flex items-center p-3 rounded-lg hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              {sidebarOpen && "Resources"}
-            </Link>
-            <Link
-              to="/users"
-              className="flex items-center p-3 rounded-lg hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              {sidebarOpen && "Users"}
-            </Link>
-            <Link
-              to="/settings"
-              className="flex items-center p-3 rounded-lg hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-.94 1.543.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c.94-1.543-.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              </svg>
-              {sidebarOpen && "Settings"}
-            </Link>
-          </nav>
-        </div>
-      </div>
-
+      
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">
@@ -226,15 +172,15 @@ const AdminDashboard = () => {
               <h1 className="text-2xl font-semibold text-gray-900">Booking Management</h1>
               <p className="text-gray-500">Manage and monitor all resource booking requests</p>
             </div>
-            <button
-              onClick={fetchBookings}
+            <Link
+              to="/bookings/create"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+              >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+              Create Booking
+            </Link>
           </div>
 
           {/* Error Message */}
