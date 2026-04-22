@@ -1,5 +1,11 @@
 package com.smartcampus.server.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.smartcampus.server.dto.CreateStaffUserRequest;
 import com.smartcampus.server.dto.StaffAccountResponse;
 import com.smartcampus.server.dto.UpdateProfileRequest;
@@ -9,12 +15,6 @@ import com.smartcampus.server.model.AuthProvider;
 import com.smartcampus.server.model.Role;
 import com.smartcampus.server.model.User;
 import com.smartcampus.server.repository.UserRepository;
-
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -65,6 +65,25 @@ public class UserService {
     // =========================
     // PROFILE UPDATE
     // =========================
+
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Check if new password is different from current
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        // Encode and update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 
     public UserDTO updateProfile(String email, UpdateProfileRequest request) {
 

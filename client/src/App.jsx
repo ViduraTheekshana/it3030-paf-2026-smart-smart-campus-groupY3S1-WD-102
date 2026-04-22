@@ -15,6 +15,10 @@ import { Layout } from "./components/layout/Layout";
 import { IncidentsList } from "./pages/incidents/IncidentsList";
 import { CreateIncident } from "./pages/incidents/CreateIncident";
 import { IncidentDetail } from "./pages/incidents/IncidentDetail";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import Profile from "./pages/Profile";
+import UserDashboard from "./pages/UserDashboard";
 import AdminBookingManagement from "./pages/AdminBookingManagement";
 import BookingPage from "./pages/BookingPage";
 import { Landing } from "./pages/Landing";
@@ -41,7 +45,18 @@ function App() {
 					<Routes>
 						<Route path="/" element={<Landing />} />
 						<Route path="/login" element={<Login />} />
-
+<Route path="/register" element={<Register />} />
+<Route path="/forgot-password" element={<ForgotPassword />} />
+<Route
+							path="/profile"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<Profile />
+									</Layout>
+								</ProtectedRoute>
+							}
+						/>
 						{/* Resource Management Routes */}
 						<Route
 							path="/resources"
@@ -53,6 +68,7 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+						
 						<Route
 							path="/resources/add"
 							element={
@@ -117,6 +133,16 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+						<Route
+							path="/userdashboard"
+							element={
+								<ProtectedRoute>
+									<Layout>
+										<UserDashboard />
+									</Layout>
+								</ProtectedRoute>
+							}
+							/>
 
 						<Route
   							path="/bookings"

@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { NotificationPanel } from "../notifications/NotificationPanel";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const pageTitles = {
 	"/dashboard": "Dashboard",
@@ -15,6 +15,7 @@ const pageTitles = {
 export function Header() {
 	const { user, isAdmin, isTechnician } = useAuth();
 	const location = useLocation();
+	const navigate = useNavigate();
 
 	const getPageTitle = () => {
 		for (const [path, title] of Object.entries(pageTitles)) {
@@ -46,11 +47,15 @@ export function Header() {
 				<div className="flex items-center gap-4">
 					<NotificationPanel />
 					<div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-						<div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center">
+						<button
+							onClick={() => navigate("/profile")}
+							className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer"
+							title="View Profile"
+						>
 							<span className="text-white font-semibold text-sm">
 								{user?.fullName?.charAt(0)?.toUpperCase()}
 							</span>
-						</div>
+						</button>
 						<div>
 							<p className="text-sm font-medium text-gray-900 leading-tight">
 								{user?.fullName}

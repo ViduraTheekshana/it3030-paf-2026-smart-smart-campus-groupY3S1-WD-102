@@ -9,20 +9,34 @@ public class PasswordResetOtp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "otp_id")
     private Long otpId;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "otp", nullable = false, length = 10)
     private String otpCode;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiryTime;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "used", nullable = false)
     private boolean used = false;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (expiryTime == null) {
+            expiryTime = LocalDateTime.now().plusMinutes(10);
+        }
+    }
 
     public PasswordResetOtp() {
     }
@@ -59,11 +73,32 @@ public class PasswordResetOtp {
         this.expiryTime = expiryTime;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public boolean isUsed() {
         return used;
     }
 
     public void setUsed(boolean used) {
         this.used = used;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PasswordResetOtp that = (PasswordResetOtp) o;
+        return otpId != null && otpId.equals(that.otpId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

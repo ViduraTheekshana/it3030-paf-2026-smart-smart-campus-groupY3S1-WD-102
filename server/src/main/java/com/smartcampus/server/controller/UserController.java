@@ -1,5 +1,6 @@
 package com.smartcampus.server.controller;
 
+import com.smartcampus.server.dto.ChangePasswordRequest;
 import com.smartcampus.server.dto.UpdateProfileRequest;
 import com.smartcampus.server.dto.UserDTO;
 import com.smartcampus.server.service.UserService;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,5 +40,20 @@ public ResponseEntity<UserDTO> updateProfile(
     return ResponseEntity.ok(
             userService.updateProfile(authentication.getName(), request)
     );
+}
+
+@PostMapping("/change-password")
+public ResponseEntity<String> changePassword(
+        Authentication authentication,
+        @Valid @RequestBody ChangePasswordRequest request) {
+    
+    try {
+        userService.changePassword(authentication.getName(), request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok("Password changed successfully");
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body("Failed to change password");
+    }
 }
 }
