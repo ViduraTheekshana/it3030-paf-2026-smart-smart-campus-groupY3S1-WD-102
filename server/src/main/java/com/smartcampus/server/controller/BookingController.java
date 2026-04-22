@@ -26,6 +26,10 @@ public class BookingController {
         @RequestParam Long resourceID,
         Authentication authentication
     ) {
+        System.out.println("CREATE BOOKING HIT");
+        System.out.println("ResourceID: " + resourceID);
+        System.out.println("User: " + authentication);
+        
         return service.createBooking(booking, resourceID, authentication);  
     }
 
