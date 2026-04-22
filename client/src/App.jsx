@@ -119,28 +119,15 @@ function App() {
 						/>
 
 						<Route
-							path="/bookings"
-							element={
-								<ProtectedRoute>
-									<Layout>
-										<AdminBookingManagement />
-									</Layout>
-								</ProtectedRoute>
-							}
+  							path="/bookings"
+  							element={
+    						<ProtectedRoute>
+      							<Layout>
+        							<AdminBookingManagement />
+      							</Layout>
+    						</ProtectedRoute>
+  							}
 						/>
-
-						<Route
-							path="/bookings/create"
-							element={
-								<ProtectedRoute>
-									<Layout>
-										<BookingPage/>
-									</Layout>
-								</ProtectedRoute>
-							}
-						/>
-
-
 					</Routes>
 				</NotificationProvider>
 			</AuthProvider>

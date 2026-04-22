@@ -1,11 +1,7 @@
 import AdminDashboard from "../components/AdminDashboard";
 
 const AdminBookingManagement = () => {
-  return (
-    <div>
-      <AdminDashboard />
-    </div>
-  );
+  return <AdminDashboard />;
 };
 
 export default AdminBookingManagement;
