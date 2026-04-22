@@ -51,7 +51,7 @@ export function IncidentsList() {
 		const fetchIncidents = async () => {
 			setLoading(true);
 			try {
-				const apiParams = { ...filters, page: currentPage, size: pageSize };
+				const apiParams = { ...filters, page: currentPage, size: pageSize, sort: "createdAt,desc" };
 
 				// Securely enforce role-based viewing
 				if (isUser) {
