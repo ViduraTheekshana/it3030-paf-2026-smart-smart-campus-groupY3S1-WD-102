@@ -259,7 +259,9 @@ export function IncidentDetail() {
 
 	// --- PERMISSION LOGIC ---
 	const isOwner = currentUserId === incident.reportedById;
-	const canEdit = isAdmin || isOwner;
+	const canEdit =
+		(incident.status === "OPEN" && (isAdmin || isOwner)) ||
+		(incident.status === "IN_PROGRESS" && isAdmin);
 	const canDelete =
 		isAdmin &&
 		(incident.status === "OPEN" || incident.status === "REJECTED");

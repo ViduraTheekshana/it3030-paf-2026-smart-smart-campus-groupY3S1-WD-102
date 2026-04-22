@@ -52,13 +52,13 @@ export function Sidebar() {
 	} else if (isTechnician() && !isAdmin()) {
 		navigation.push({
 			name: "Assigned Tickets",
-			href: "/incidents?assigned=me",
+			href: "/incidents",
 			icon: AlertTriangleIcon,
 		});
 		navigation.push({
-			name: "All Tickets",
-			href: "/incidents",
-			icon: AlertTriangleIcon,
+			name: "My Bookings",
+			href: "/bookings",
+			icon: CalendarIcon,
 		});
 	} else if (isAdmin()) {
 		navigation.push({
