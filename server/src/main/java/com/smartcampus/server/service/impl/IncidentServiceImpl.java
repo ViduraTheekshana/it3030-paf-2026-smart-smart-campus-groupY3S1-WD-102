@@ -78,6 +78,7 @@ public class IncidentServiceImpl implements IncidentService {
                 .preferredContact(request.getPreferredContact())
                 .reportedBy(reporter)
                 .status(TicketStatus.OPEN)
+                .createdAt(LocalDateTime.now())// this line cause to error of create ticket
                 .build();
 
         if (request.getResourceId() != null) {

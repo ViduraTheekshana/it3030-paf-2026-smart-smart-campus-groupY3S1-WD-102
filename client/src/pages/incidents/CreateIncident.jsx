@@ -73,6 +73,7 @@ export function CreateIncident() {
 		setFiles((prev) => prev.filter((_, i) => i !== index));
 	};
 
+	//validate
 	const validate = () => {
 		const newErrors = {};
 		if (!formData.title.trim()) newErrors.title = "Title is required";
